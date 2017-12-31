@@ -1,0 +1,35 @@
+{
+  "name": "1412010_1412160_1412480",
+  "version": "1.0.0",
+  "description": "Blockchain-kcoin-server",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "1412480",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "crypto": "0.0.3",
+    "express": "^4.15.2",
+    "express-handlebars": "^3.0.0",
+    "express-handlebars-sections": "^1.0.1",
+    "express-mysql-session": "^1.2.0",
+    "express-session": "^1.15.2",
+    "fs": "0.0.1-security",
+    "mime": "^1.3.6",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.18.1",
+    "morgan": "^1.8.1",
+    "multer": "^1.3.0",
+    "mustache": "^2.3.0",
+    "mv": "^2.1.1",
+    "mysql": "^2.13.0",
+    "nodemailer": "^4.0.1",
+    "nodemon": "^1.11.0",
+    "q": "^1.5.0",
+    "serve-favicon": "^2.4.2",
+    "session-file-store": "^1.0.0",
+    "wnumb": "^1.1.0"
+  }
+}
