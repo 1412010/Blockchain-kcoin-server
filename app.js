@@ -4,7 +4,7 @@ var express = require('express'),
     morgan = require('morgan'),
     path = require('path'),
     //MapController = require('./controllers/MapController');
-    myApi = require('./controllers/api/myApi'),
+    restApi = require('./controllers/api/restApi'),
     dbConnect = require('./fn/dbConnection'),
     CORS = require('cors');
 var app = express();
@@ -30,7 +30,7 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 
-app.use('/api/myApi', myApi);
+app.use('/api/restApi', restApi);
 
 
 app.listen(process.env.PORT || 3000, function () {
