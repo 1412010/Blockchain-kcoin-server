@@ -3,10 +3,13 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     morgan = require('morgan'),
     path = require('path'),
-    studentController = require('./controllers/studentController');
-    studentapi= require('./controllers/api/studentapi');
+    //MapController = require('./controllers/MapController');
+    myApi = require('./controllers/api/myApi'),
+    dbConnect = require('./fn/dbConnection'),
+    CORS = require('cors');
 var app = express();
 
+app.use(CORS());
 app.use(morgan('dev'));
 
 app.engine('hbs', handlebars({
@@ -26,9 +29,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: false
 }));
-app.use('/student', studentController);
-app.use('/api/student', studentapi);
 
-app.listen(3000, function() {
+app.use('/api/myApi', myApi);
+
+
+app.listen(process.env.PORT || 3000, function () {
     console.log('SERVER is running...');
 });
