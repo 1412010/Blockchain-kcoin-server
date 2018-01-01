@@ -4,6 +4,14 @@ var router = express.Router();
 var accountModel = require('../../models/accountModel');
 var crypto = require('crypto');
 var randomstring = require("randomstring");
+var nodemailer = require('nodemailer');
+var smtpTransport = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'myauctionwebapp@gmail.com',
+        pass: 'tamhieuga'
+    }
+});
 /* PUT students listing. */
 router.put('/Register', function(req, res, next) {
 	var ePass = crypto.createHash('md5').update(req.body.password).digest('hex');
@@ -27,6 +35,7 @@ router.put('/Register', function(req, res, next) {
 				}
 				json = JSON.parse(body);
 				console.log(json);
+				var confirmCode = randomstring.generate(6);
 				var data = {
 					_email: req.body.email,
 					_password: ePass,
@@ -34,7 +43,7 @@ router.put('/Register', function(req, res, next) {
 					_publicKey: json.publicKey,
 					_privateKey: json.privateKey,
 					_role: 0,
-					_confirmCode: randomstring.generate(4),
+					_confirmCode: confirmCode,
 					_isActive: false,
 					_realBalance: 0,
 					_availableBalance: 0
@@ -46,6 +55,23 @@ router.put('/Register', function(req, res, next) {
 						return read.status(500).send("Không thể đăng ký");
 					} else {
 						console.log(row);
+						var text = "Mã xác nhận của tài khoản bạn là: " + confirmCode;
+						var mailOptions = {
+							from: "Web Auction <myauctionwebapp@gmail.com>", // sender address
+							to: req.body.email, // list of receivers
+							subject: "Mã xác nhận tài khoản BlockChain", // Subject line
+							text: text // plaintext body
+						};
+						console.log(mailOptions);
+		
+						smtpTransport.sendMail(mailOptions, function(error, response) {
+							if (error) {
+								console.log(error);
+							} else {
+								console.log("Message sent: " + response.message);
+							}
+						});
+
 						return res.json(row);
 					}
 				});
