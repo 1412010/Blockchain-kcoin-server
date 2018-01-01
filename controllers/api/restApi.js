@@ -58,5 +58,23 @@ router.put('/Register', function(req, res, next) {
 	});
 });
 
+//Lấy thông tin tài khoản
+router.get('/address', function(req, res) {
+	accountModel.find(req.params.address, function(error, account) {
+		if (error) {
+			console.log(error);
+			return res.status(500).send(error);
+		}
+		if (account) {
+			var data = {
+				realBalance: account._realBalance,
+				availableBalance:account._availableBalance,
+				address: account._address,
+				email: account._email
+			}
+		}
+	})
+});
+
 
 module.exports = router;
