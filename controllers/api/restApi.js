@@ -16,6 +16,7 @@ var smtpTransport = nodemailer.createTransport({
 });
 const secretKey = 'key';
 var utils = require('../../fn/utils');
+var transactions = require('../../fn/transactions');
 /* PUT students listing. */
 router.put('/Register', function (req, res, next) {
 	var ePass = crypto.createHash('md5').update(req.body.password).digest('hex');
