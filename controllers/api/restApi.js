@@ -1,8 +1,10 @@
 var request = require('request');
 var express = require('express');
 var router = express.Router();
+var moment = require('moment');
 var accountModel = require('../../models/accountModel');
 var confirmAccountCode = require('../../models/confirmAccountCode');
+var transactionModel = require('../../models/transactionModel');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var randomstring = require("randomstring");
@@ -72,7 +74,7 @@ router.put('/Register', function (req, res, next) {
 						//gửi mã xác nhận
 						var text = "Mã xác nhận của tài khoản bạn là: " + confirmCode;
 						var mailOptions = {
-							from: "Web Auction <myauctionwebapp@gmail.com>", // sender address
+							from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
 							to: req.body.email, // list of receivers
 							subject: "Mã xác nhận tài khoản BlockChain", // Subject line
 							text: text // plaintext body
@@ -181,13 +183,68 @@ router.post('/Login', function (req, res, next) {
 	});
 })
 
+//khởi tạo transaction chờ xác nhận
 router.post('/Transaction', function (req, res, next) {
 	var inputAddress = req.body.inputAddress;//tài khoản yêu cầu gửi
-	var outputAddress = req.body.outputAddress;//địa chỉ nhận
-	var value = req.body.value;
-	var condition = {
+
+	const condition = {
 		_address: inputAddress
 	}
+	accountModel.find(condition, function (error, row) {
+		if (error) {
+			return res.status(400).send("Khởi tạo giao dịch thất bại!");
+		}
+		if (row.length > 0) {
+			var outputAddress = req.body.outputAddress;//địa chỉ nhận
+			var value = req.body.value;
+			const confirmCode = randomstring.generate(10);
+			const dateInit = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+			const data = {
+				_inputAddress: inputAddress,
+				_outputAddress: outputAddress,
+				_value: value,
+				_confirmCode: confirmCode,
+				_state: KHOITAO,
+				_dateInit: dateInit
+			}
+
+			transactionModel.create(data, function (error, row1) {
+				if (error) {
+					return res.status(400).send("Khởi tạo giao dịch thất bại!")
+				} else {
+					const email = row[0]._email;
+					//gửi mã xác nhận
+					var text = "Tài khoản bạn đã yêu cầu thực rút tiền đến tài khoản: " + outputAddress;
+					text += "\n " + "Vui lòng xác nhận với mã: " + confirmCode;
+					var mailOptions = {
+						from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
+						to: email, // list of receivers
+						subject: "Mã xác nhận giao dịch BlockChain", // Subject line
+						text: text // plaintext body
+					};
+					console.log(mailOptions);
+
+					smtpTransport.sendMail(mailOptions, function (error, response) {
+						if (error) {
+							console.log(error);
+						} else {
+							console.log("Message sent: " + response.message);
+						}
+					});
+					const result = {
+						mess: "Khởi tạo giao dịch thành công.",
+						data: row1
+					}
+					return res.json(result);
+				}
+			});
+		}
+	});
+
+})
+
+//Xác nhận transaction và thực hiện post lên api
+router.post('/ConfirmTransaction', function (req, res, next) {
 	accountModel.find(condition, function (error, row) {
 		if (error) {
 			return res.status(400).send("Thêm giao dịch thất bại")
