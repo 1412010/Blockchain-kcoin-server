@@ -45,10 +45,15 @@ exports.toBinary = toBinary;
 
 // Sign transaction
 let sign = function (transaction, keys) {
+    console.log(transaction);
+    console.log(keys);
     let message = toBinary(transaction, true);
+    console.log("Test1");
     transaction.inputs.forEach((input, index) => {
+        console.log("Test2");
         let key = keys[index];
         let signature = utils.sign(message, key.privateKey);
+        console.log("Test3");
         // Genereate unlock script
         input.unlockScript = 'PUB ' + key.publicKey + ' SIG ' + signature;
     });
