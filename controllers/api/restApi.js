@@ -281,7 +281,8 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 
 	const confirmCode = req.body.code;
 	const condition = {
-		_confirmCode: confirmCode
+		_confirmCode: confirmCode,
+		_state: KHOITAO
 	}
 	//Tìm giao dịch có mã xác nhận tương ứng
 	transactionModel.find(condition, function (error, row) {
@@ -299,50 +300,11 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 				}
 				if (acc.length > 0) {
 					if (acc[0]._availableBalance < row[0]._value) {//kiểm tra số dư khả dụng
-						return res.status(400).send("Thực hiện giao dịch thất bại!");
+						return res.status(400).send("Thực hiện giao dịch thất bại! Số dư không đủ!");
 					} else {
-						helper.GetListOutputs(row[0]._value)
-							.then(function (result) {
-								if (result !== null) {
-									console.log(result);
-									//Generate transacitons
-									let bountyTransaction = {
-										version: 1,
-										inputs: [],
-										outputs: []
-									};
-
-									//danh sách input từ output khả dụng
-									console.log("test1");
-									const outputList = result.resultOutputs;
-									outputList.forEach(output => {
-										bountyTransaction.inputs.push({
-											referencedOutputHash: output._hash,
-											referencedOutputIndex: output._index,
-											unlockScript: ''
-										});
-									});
-									// // Change because reference output must be use all value
-									const change = result.sumValue - row[0]._value;
-									if (change > 0) {
-										bountyTransaction.outputs.push({
-											value: change,
-											lockScript: 'ADD ' + 'a32426e59e7a91d1fd90fdbf1b30df20c60756cbbfb8cdc1d21f9131dc674565'
-										});
-									}
-									console.log("test3");
-									bountyTransaction.outputs.push({
-										value: row[0]._value,
-										lockScript: 'ADD ' + row[0]._outputAddress
-									});
-
-									console.log(bountyTransaction);
-									// Sign
-									transactions.sign(bountyTransaction, result.keys);
-									console.log(bountyTransaction);
-									return res.json(bountyTransaction);
-									console.log("test5");
-								}
+						helper.HandleTransaction(row[0], acc[0])
+							.then(function(transaction) {
+								return res.json(transaction);
 							})
 					}
 				}
