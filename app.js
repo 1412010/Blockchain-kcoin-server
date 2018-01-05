@@ -32,6 +32,20 @@ app.use(bodyParser.urlencoded({
 
 app.use('/api/restApi', restApi);
 
+//Web Socket--------------------------
+const WebSocket = require('ws');
+
+const ws = new WebSocket('wss://api.kcoin.club/');
+
+ws.onopen = function () {
+    console.log('Connected');
+};
+
+ws.onmessage = function (data) {
+    console.log(data);
+};
+//------------------------------------
+
 
 app.listen(process.env.PORT || 3000, function () {
     console.log('SERVER is running...');
