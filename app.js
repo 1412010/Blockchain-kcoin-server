@@ -37,13 +37,27 @@ const WebSocket = require('ws');
 
 const ws = new WebSocket('wss://api.kcoin.club/');
 
-ws.onopen = function () {
-    console.log('Connected');
+ws.onopen = function() {
+    console.log('Opened');
+    KeepAlive();
 };
 
-ws.onmessage = function (data) {
+ws.onmessage = function(data) {
     console.log(data);
 };
+
+ws.onerror = function() {
+    console.log("Error");
+}
+
+ws.onclose = function() {
+    console.log("Closed");
+}
+
+function KeepAlive() {
+    ws.send("Keep me alive");
+    setTimeout(KeepAlive, 30000);
+}
 //------------------------------------
 
 
