@@ -4,9 +4,12 @@ var inputModel = require('../models/inputsModel');
 var accountModel = require('../models/accountModel');
 var transationModel = require('../models/transactionModel');
 var transactions = require('../fn/transactions');
+var request = require('request');
+var moment = require('moment');
 const KHOITAO = 'KHỞI TẠO';
 const DANGXULY = 'ĐANG XỬ LÝ';
 const HOANTHANH = 'HOÀN THÀNH';
+
 let GetListOutputs = function (value) {
     var deferred = Q.defer();
     outputModel.find({}, function (error, rows) {
@@ -71,35 +74,15 @@ let HandleTransaction = function (transaction, acc) {
         .then(function (result) {
             if (result !== null) {
                 console.log(result);
-                const dataAccount = {
-                    _availableBalance: acc._availableBalance - result.sumValue,
-                    _realBalance: acc._realBalance - transaction._value
-                }
-                const condition = {
-                    _id: acc._id
-                }
-                accountModel.findOneAndUpdate(condition, dataAccount, { new: true }, function (error, rows) {
-                    console.log(rows);
-                })
+
                 //Generate transacitons
                 let bountyTransaction = {
                     version: 1,
                     inputs: [],
                     outputs: []
                 };
-
-                const condition2 = {
-                    _id:transaction._id
-                }
-                const dataTrans = {
-                    _state: DANGXULY
-                }
-                transationModel.findOneAndUpdate(condition2, dataTrans, {new: true}, function(error, updatedTrans){
-                    console.log(updatedTrans);
-                })
-
                 //danh sách input từ output khả dụng
-                //console.log("test1");
+                console.log("test1");
                 const outputList = result.resultOutputs;
                 outputList.forEach(output => {
                     bountyTransaction.inputs.push({
@@ -116,16 +99,105 @@ let HandleTransaction = function (transaction, acc) {
                         lockScript: 'ADD ' + 'a32426e59e7a91d1fd90fdbf1b30df20c60756cbbfb8cdc1d21f9131dc674565'
                     });
                 }
-                
+
                 bountyTransaction.outputs.push({
                     value: transaction._value,
                     lockScript: 'ADD ' + transaction._outputAddress
                 });
-                console.log("test4");
                 // Sign
                 transactions.sign(bountyTransaction, result.keys);
                 console.log(bountyTransaction);
-                return deferred.resolve(bountyTransaction);
+                //request post transaction
+                var url = 'https://api.kcoin.club/transactions';
+                var options = {
+                    method: 'post',
+                    body: bountyTransaction,
+                    json: true,
+                    url: url
+                }
+                request(options, function (err, res, body) {
+                    if (err) {
+                        console.error('error posting json: ', error);
+                        return deferred.resolve(null);
+                    } else {
+                        console.log(res);       
+                        const resBody = res.body;
+                        console.log(resBody);
+                        const transHash = resBody.hash;
+                        console.log(transHash);
+                        //cập nhật số dư hiện tại và số dư khả dụg
+                        const dataAccount = {
+                            _availableBalance: acc._availableBalance - result.sumValue,
+                            _realBalance: acc._realBalance - transaction._value
+                        }
+                        const condition = {
+                            _id: acc._id
+                        }
+                        accountModel.findOneAndUpdate(condition, dataAccount, { new: true }, function (error, rows) {
+                            console.log(rows);
+                        })
+                        //kết thúc cập nhật số dư
+
+                        //cập nhật transaction đang xử lý
+                        const condition2 = {
+                            _id: transaction._id
+                        }
+                        const dateSuccess = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+                        const dataTrans = {
+                            _state: DANGXULY,
+                            _hash: transHash,
+                            _dateSuccess: dateSuccess
+                        }
+                        transationModel.findOneAndUpdate(condition2, dataTrans, { new: true }, function (error, updatedTrans) {
+                            console.log(updatedTrans);
+                        })
+                        //kết thúc cập nhật transaction
+
+                        //cập nhật outputs 
+                        outputList.forEach(output => {
+                            const conditionOuput = {
+                                _hash: output._hash,
+                                _output: output._output,
+                                _index: output._index,
+                            }
+                            const updateDataOutput = {
+                                _canBeUsed: false
+                            }
+                            outputModel.findOneAndUpdate(conditionOuput, updateDataOutput, 
+                                {new: true}, function(error, updateOutput) {
+                                    console.log(updateOutput);
+                                })
+                        });
+
+                        //thêm input vào csdl
+                        console.log( resBody.inputs);
+                        const inputList =  resBody.inputs;
+                        console.log(inputList);
+                        for(i = 0 ; i < inputList.length; i++)
+                        {
+                            console.log(inputList[i]);
+                            const newInputData = {
+                                _hash: transHash,
+                                _referencedOutputHash: inputList[i].referencedOutputHash,
+                                _referencedOutputIndex: inputList[i].referencedOutputIndex
+                            }
+                            inputModel.create(newInputData, function(error, newInput){
+                                console.log(newInput);
+                            })
+                        }             
+                        // resBody.inputs.forEach(intput => {
+                        //     const newInputData = {
+                        //         _hash: transHash,
+                        //         _referencedOutputHash: input.referencedOutputHash,
+                        //         _referencedOutputIndex: input.referencedOutputIndex
+                        //     }
+                        //     inputModel.create(newInputData, function(error, newInput){
+                        //         console.log(newInput);
+                        //     })
+                        // })
+                        return deferred.resolve(resBody);
+                    }
+                })  
             }
         })
     return deferred.promise;
@@ -133,6 +205,7 @@ let HandleTransaction = function (transaction, acc) {
 
 exports.HandleTransaction = HandleTransaction;
 
+//Tìm keys tương ứng với danh sách outputs cần dùng (địa chỉ nằm trong hệ thống)
 let GetKeysFromOutput = function (outputs) {
     var deferred = Q.defer();
     const keys = [];

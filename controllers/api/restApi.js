@@ -314,53 +314,7 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 		}
 	})
 
-	// const key = {
-	// 	address: row[0]._address,
-	// 	privateKey: row[0]._privateKey,
-	// 	publicKey: row[0]._publicKey
-	// }
-
-	// Generate transacitons
-	// let bountyTransaction = {
-	// 	version: 1,
-	// 	inputs: [],
-	// 	outputs: []
-	// };
-	//Tìm referenceOutputsHashes hợp lệ
-	//let keys = [];
-	// referenceOutputsHashes.forEach(hash => {
-	// 	bountyTransaction.inputs.push({
-	// 	  referencedOutputHash: hash,
-	// 	  referencedOutputIndex: 0,
-	// 	  unlockScript: ''
-	// 	});
-	// 	keys.push(key);
-	//   });
-
-	// bountyTransaction.inputs.push({
-	// 	referencedOutputHash: "d6fd4a290c22190d6c414f51c96a7eb800c1705e83d3931861f562935c1f831c",
-	// 	referencedOutputIndex: 1,
-	// 	unlockScript: ''
-	// });
-	// keys.push(key);
-
-	// // Change because reference output must be use all value
-	// const change = 9900;
-	// bountyTransaction.outputs.push({
-	// 	value: change,
-	// 	lockScript: 'ADD ' + 'a32426e59e7a91d1fd90fdbf1b30df20c60756cbbfb8cdc1d21f9131dc674565'
-	// });
-
-	// //Output to all destination 
-	// bountyTransaction.outputs.push({
-	// 	value: value,
-	// 	lockScript: 'ADD ' + outputAddress
-	// });
-	// console.log(bountyTransaction);
-	// // Sign
-	// transactions.sign(bountyTransaction, keys);
-	// console.log(bountyTransaction);
-	// return res.json(bountyTransaction);
+	
 	console.log("test2");
 })
 module.exports = router;
