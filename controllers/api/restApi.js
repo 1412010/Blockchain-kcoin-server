@@ -120,7 +120,7 @@ router.put('/Register', function (req, res, next) {
 
 
 //Lấy thông tin tài khoản
-router.get('/Address', function (req, res) {
+router.get('/:address', function (req, res) {
 	accountModel.find(req.params.address, function (error, account) {
 		if (error) {
 			console.log(error);
@@ -422,5 +422,18 @@ router.post('/GetAllAccounts', function (req, res, next) {
 		return res.status(403).send("Chưa đăng nhập!");
 	}
 })
+
+//Lấy các block từ Blockchain
+router.get('/Blocks', function (req, res, next) {
+	request('https://api.kcoin.club/blocks', function (error, response, body) {
+		if (error) {
+			console.log(error);
+			return read.status(500).send("Không thể lấy thông tin các block từ Blockchain");
+		}
+		var data = JSON.parse(body);
+		console.log(data);
+		return res.json(data);
+	})
+
 
 module.exports = router;

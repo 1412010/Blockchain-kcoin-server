@@ -307,3 +307,48 @@ let GetKeysFromOutput = function (outputs) {
 //     })
 //     return deferred.promise;
 // }
+
+
+/*kiểm tra email có trong hệ thống không.
+    Giá trị trả về:
+        -1: lỗi
+        0: không tồn tại
+        1: tồn tại*/
+let IsAddresssExist = function(address) {
+	accountModel.find({ _address: address }, function (error, account) {
+		if (error) {
+            console.log("Lỗi khi kiểm tra address nhận từ websocket\nAddress: " + address);
+			return -1;
+        }
+        if (account.length === 0) {
+            console.log("Không tìm thấy address " + address);
+            return 0;
+        }
+    })
+    console.log("Address " + address + " có tồn tại");
+    return 1;
+}
+
+exports.IsAddresssExist = IsAddressExist;
+
+/*kiểm tra transaction có trong hệ thống không.
+    Giá trị trả về:
+        -1: lỗi
+        0: không tồn tại
+        1: tồn tại*/
+let IsTransactionExist = function(hash) {
+	transactionModel.find({ _hash: hash }, function (error, transaction) {
+		if (error) {
+            console.log("Lỗi khi kiểm tra transaction nhận từ websocket\nHash: " + hash);
+			return -1;
+        }
+        if (transaction.length === 0) {
+            console.log("Không tìm thấy transaction có hash " +hash);
+            return 0;
+        }
+    })
+    console.log("Transaction có hash" + hash + " có tồn tại");
+    return 1;
+}
+
+exports.IsTransactionExist = IsTransactionExist;
