@@ -5,10 +5,10 @@ var express = require('express'),
     path = require('path'),
     //MapController = require('./controllers/MapController');
     restApi = require('./controllers/api/restApi'),
-    accountController = require('./controllers/accountController'),
     dbConnect = require('./fn/dbConnection'),
     CORS = require('cors');
 var app = express();
+var helper = require('../../fn/helper');
 
 app.use(CORS());
 app.use(morgan('dev'));
@@ -65,8 +65,16 @@ function KeepAlive() {
 
 function OnReceivedData(data) {
     if (data.type === 'block'){
-        data.data.transactions.forEach(element => {
-            
+        data.data.transactions.forEach(transaction => {
+            transaction.outputs.forEach(output => {
+                var parts = output.lockScript.split(' ');
+                var receiveAddress = parts[1];
+                if (helper.IsAddressExist(receiveAddress) == 1) {
+                    if (helper.IsTransactionExist(transaction.hash) == 1) {
+                        
+                    }
+                }
+            });
         });
     }
 }
