@@ -120,28 +120,6 @@ router.put('/Register', function (req, res, next) {
 });
 
 
-//Lấy thông tin tài khoản
-router.get('/:address', function (req, res) {
-	accountModel.find(req.params.address, function (error, account) {
-		if (error) {
-			console.log(error);
-			return res.status(500).send(error);
-		}
-		if (account) {
-			var data = {
-				realBalance: account._realBalance,
-				availableBalance: account._availableBalance,
-				address: account._address,
-				email: account._email
-			}
-			console.log(data);
-			return res.json(data);
-		}
-		return res.status(500).send("Xảy ra lỗi khi lấy thông tin tài khoản");
-	})
-});
-
-
 router.post('/ConfirmAccount', function (req, res, next) {
 	var condition = {
 		_confirmCode: req.body.code
