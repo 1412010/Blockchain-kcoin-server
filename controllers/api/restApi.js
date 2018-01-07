@@ -303,7 +303,7 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 						return res.status(400).send("Thực hiện giao dịch thất bại! Số dư không đủ!");
 					} else {
 						helper.HandleTransaction(row[0], acc[0])
-							.then(function(transaction) {
+							.then(function (transaction) {
 								return res.json(transaction);
 							})
 					}
@@ -314,10 +314,114 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 		}
 	})
 
-	
 	console.log("test2");
 })
 
+router.post('/GetOwnTransactions', function (req, res, next) {
+	if (req.isAuthendicated) {
+		if (req.user.role == 0) {
+			var condition = {
+				$or: [
+					{ _inputAddress: req.user.address },
+					{ _outputAddress: req.user.address }
+				]
+			}
+			console.log(condition);
+			transactionModel.find(condition, null, { sort: { _dateInit: -1 } }, function (err, rows) {
+				if (err) {
+					console.log(err);
+					return res.status(500).send("Lỗi!");
+				}
+				if (rows.length > 0) {
+					return res.json(rows);
+				} else {
+					return res.status(404).send("Không tìm thấy dữ liệu!");
+				}
+			})
+		} else {
+			return res.status(400).send("Chức năng không dùng cho tài khoản admin!");
+		}
+	} else {
+		return res.status(403).send("Chưa đăng nhập!");
+	}
+})
+
+router.post('/GetSystemTransactions', function (req, res, next) {
+	if (req.isAuthendicated) {
+		if (req.user.role == 0) {
+			return res.status(404).send("Tài khoản không được quyền truy cập nội dung này!");
+		} else {
+			transactionModel.find({}, null, { sort: { _dateInit: -1 } }, function (err, rows) {
+				if (err) {
+					console.log(err);
+					return res.status(500).send("Lỗi!");
+				}
+				if (rows.length > 0) {
+					return res.json(rows);
+				} else {
+					return res.status(404).send("Không tìm thấy dữ liệu!");
+				}
+			})
+		}
+	} else {
+		return res.status(403).send("Chưa đăng nhập!");
+	}
+})
+
+router.post('/GetSystemStatistic', function (req, res, next) {
+	if (req.isAuthendicated) {
+		if (req.user.role == 0) {
+			return res.status(404).send("Tài khoản không được quyền truy cập nội dung này!");
+		} else {
+			accountModel.find({}, function (err, rows) {
+				if (err) {
+					console.log(err);
+					return res.status(500).send("Lỗi!");
+				}
+				if (rows.length > 0) {
+					var sumRealBalance = 0;
+					var sumAvailableBalance = 0;
+					rows.forEach(acc => {
+						sumAvailableBalance += acc._availableBalance;
+						sumRealBalance += acc._realBalance;
+					})
+					const result = {
+						numberOfAcc: rows.length,
+						sumRealBalance,
+						sumAvailableBalance
+					}
+					return res.json(result);
+				} else {
+					return res.status(404).send("Không tìm thấy dữ liệu!");
+				}
+			})
+		}
+	} else {
+		return res.status(403).send("Chưa đăng nhập!");
+	}
+})
+
+router.post('/GetAllAccounts', function (req, res, next) {
+	if (req.isAuthendicated) {
+		if (req.user.role == 0) {
+			return res.status(404).send("Tài khoản không được quyền truy cập nội dung này!");
+		} else {
+			accountModel.find({}, function (err, rows) {
+				if (err) {
+					console.log(err);
+					return res.status(500).send("Lỗi!");
+				}
+				if (rows.length > 0) {
+					return res.json(rows);
+				} else {
+					return res.status(404).send("Không tìm thấy dữ liệu!");
+				}
+			})
+		}
+	} else {
+		return res.status(403).send("Chưa đăng nhập!");
+	}
+})
 
 //Lấy các block từ Blockchain
 router.get('/Blocks', function (req, res, next) {
@@ -330,6 +434,6 @@ router.get('/Blocks', function (req, res, next) {
 		console.log(data);
 		return res.json(data);
 	})
-})
+
 
 module.exports = router;
