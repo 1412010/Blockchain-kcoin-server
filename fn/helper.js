@@ -3,6 +3,7 @@ var outputModel = require('../models/outputsModel');
 var inputModel = require('../models/inputsModel');
 var accountModel = require('../models/accountModel');
 var transationModel = require('../models/transactionModel');
+var blockModel = require('../models/blockModel');
 var transactions = require('../fn/transactions');
 var request = require('request');
 var moment = require('moment');
@@ -286,31 +287,9 @@ let GetKeysFromOutput = function (outputs) {
     return deferred.promise;
 }
 
-// exports.OutputCanBeUsed = function(outputs) {
-//     var deferred = Q.defer();
-//     //kiểm tra output có được dùng trong các transaction trước hay không
-//     const condition = {
-//         $and :[
-//             {_referencedOutputHash: outputs._hash},
-//             {_referencedOutputIndex: outputs._index}
-//         ]
-//     }
-//     inputModel.find(condition, function(error, rows) {
-//         if(error) {
-//             return deferred.resolve(false);
-//         }
-//         if(rows.length > 0) {
-//             return deferred.resolve(false);
-//         }else {
-//             return deferred.resolve(true);
-//         }
-//     })
-//     return deferred.promise;
-// }
-
 
 //kiểm tra email có trong hệ thống không.
-let IsAddresssExist = function(accounts, address) {
+let IsAddressExist = function (accounts, address) {
     var deferred = Q.defer();
     accounts.forEach(account => {
         if (account._address === address) {
@@ -322,12 +301,12 @@ let IsAddresssExist = function(accounts, address) {
     return deferred.promise;
 }
 
-exports.IsAddresssExist = IsAddresssExist;
+exports.IsAddressExist = IsAddressExist;
 
 
 //kiểm tra transaction có trong hệ thống không.
 
-let IsTransactionExist = function(transactions, hash) {
+let IsTransactionExist = function (transactions, hash) {
     var deferred = Q.defer();
     transactions.forEach(transaction => {
         if (transaction._hash === hash) {
@@ -342,12 +321,12 @@ let IsTransactionExist = function(transactions, hash) {
 exports.IsTransactionExist = IsTransactionExist;
 
 
-let GetAccounts = function() {
+let GetAccounts = function () {
     var deferred = Q.defer();
     accountModel.find({}, function (error, data) {
-		if (error) {
+        if (error) {
             console.log("Lỗi khi lấy danh sách account");
-			return deferred.resolve(null);
+            return deferred.resolve(null);
         }
         else {
             return deferred.resolve(data);
@@ -359,12 +338,12 @@ let GetAccounts = function() {
 exports.GetAccounts = GetAccounts;
 
 
-let GetTransactions = function() {
+let GetTransactions = function () {
     var deferred = Q.defer();
     transactionModel.find({}, function (error, data) {
-		if (error) {
+        if (error) {
             console.log("Lỗi khi lấy danh sách transaction");
-			return deferred.resolve(null);
+            return deferred.resolve(null);
         }
         else {
             return deferred.resolve(data);
@@ -375,10 +354,10 @@ let GetTransactions = function() {
 
 exports.GetTransactions = GetTransactions;
 
-let UpdateTransaction = function(hash, data) {
+let UpdateTransaction = function (hash, data) {
     var deferred = Q.defer();
 
-    transationModel.findOneAndUpdate({_hash: hash}, data, {new: true}, function(error, updatedData){
+    transationModel.findOneAndUpdate({ _hash: hash }, data, { new: true }, function (error, updatedData) {
         if (error) {
             return deferred.resolve(null);
         }
@@ -393,9 +372,9 @@ let UpdateTransaction = function(hash, data) {
 exports.UpdateTransaction = UpdateTransaction;
 
 
-let UpdateRealBalance = function(address, amount) {
+let UpdateRealBalance = function (address, amount) {
     var deferred = Q.defer();
-    accountModel.findOneAndUpdate({_address: address}, {$inc: {_realBalance: amount}}, {new: true}, function(error, updatedData){
+    accountModel.findOneAndUpdate({ _address: address }, { $inc: { _realBalance: amount } }, { new: true }, function (error, updatedData) {
         if (error) {
             return deferred.resolve(null);
         }
@@ -408,9 +387,9 @@ let UpdateRealBalance = function(address, amount) {
 exports.UpdateRealBalance = UpdateRealBalance;
 
 
-let UpdateAvailableBalance = function(address, amount) {
+let UpdateAvailableBalance = function (address, amount) {
     var deferred = Q.defer();
-    accountModel.findOneAndUpdate({_address: address}, {$inc: {_availableBalance: amount}}, {new: true}, function(error, updatedData){
+    accountModel.findOneAndUpdate({ _address: address }, { $inc: { _availableBalance: amount } }, { new: true }, function (error, updatedData) {
         if (error) {
             return deferred.resolve(null);
         }
@@ -423,9 +402,9 @@ let UpdateAvailableBalance = function(address, amount) {
 exports.UpdateAvailableBalance = UpdateAvailableBalance;
 
 
-let AddOutput = function(data) {
+let AddOutput = function (data) {
     var deferred = Q.defer();
-    outputModel.create(data, function(error, output) {
+    outputModel.create(data, function (error, output) {
         if (error) {
             return deferred.resolve(null);
         }
@@ -437,10 +416,13 @@ let AddOutput = function(data) {
 exports.AddOutput = AddOutput;
 
 
-let AddTransaction = function(data) {
+let AddTransaction = function (data) {
     var deferred = Q.defer();
-    transationModel.create(data, function(error, transaction) {
+    console.log(data);
+    transationModel.create(data, function (error, transaction) {
+        console.log(transaction);
         if (error) {
+            console.log(error);
             return deferred.resolve(null);
         }
         else return deferred.resolve(transaction);
@@ -449,3 +431,144 @@ let AddTransaction = function(data) {
 }
 
 exports.AddTransaction = AddTransaction;
+
+let WorkOnBlock = function (block) {
+    console.log("Vào hàm xử lý block");
+    console.log(block);
+    accountModel.find({}, function (error1, accounts) {
+        if (error1) {
+            console.log("Lỗi khi lấy danh sách account");
+            return;
+        }
+        if (accounts.length > 0) {
+
+            transationModel.find({}, function (error2, transactions) {
+                if (error2) {
+                    console.log("Lỗi khi lấy danh sách transaction");
+                    return;
+                }
+                if (transactions.length > 0) {
+                    block.transactions.forEach(transaction => {
+                        transaction.outputs.forEach((output, index) => {
+                            var parts = output.lockScript.split(' ');
+                            var receiveAddress = parts[1];
+                            //kiểm tra address nhận có thuộc csdl không
+                            var isAddressExist = false;
+                            for (i = 0; i < accounts.length; i++) {
+                                //console.log(accounts[i]);
+                                //console.log(receiveAddress);
+                                if (accounts[i]._address == receiveAddress) {
+                                    isAddressExist = true;
+                                    break;
+                                }
+                            }
+                            console.log(isAddressExist);
+                            if (isAddressExist) {//tài khoản thuộc hệ thống
+                                var isTransactionExist = false;
+                                for (j = 0; j < transactions.length; j++) {//kiểm tra transaction có thuộc hệ thống không
+                                    if (transaction.hash == transactions[j]._hash) {
+                                        isTransactionExist = true;
+                                        break;
+                                    }
+                                }
+                                console.log(isTransactionExist);
+                                if (isTransactionExist) {//transaction thuộc hệ thống
+                                    console.log("transaction thuộc hệ thống");
+                                    var data = {
+                                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
+                                        _state: 'HOÀN THÀNH'
+                                    }
+                                    UpdateTransaction(transaction.hash, data);
+                                    UpdateAvailableBalance(receiveAddress, output.value);
+                                } else {
+                                    console.log("transaction không thuộc hệ thống");
+                                    transactionData = {
+                                        _hash: transaction.hash,
+                                        _inputAddress: "",
+                                        _outputAddress: receiveAddress,
+                                        _value: output.value,
+                                        _confirmCode: "",
+                                        _state: 'HOÀN THÀNH',
+                                        _dateInit: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
+                                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss')
+                                    }
+                                    AddTransaction(transactionData);
+
+                                    UpdateAvailableBalance(receiveAddress, output.value);
+                                    UpdateRealBalance(receiveAddress, output.value);
+
+                                }
+                                var outputData = {
+                                    _hash: transaction.hash,
+                                    _output: receiveAddress,
+                                    _index: index,
+                                    _value: output.value,
+                                    _canBeUsed: true
+                                }
+                                AddOutput(outputData);
+                            }
+
+                        });
+                    });
+                }
+            })//transactionmodel
+
+        }//hết accounts.length > 0
+    })
+
+    blockModel.find({}, function (err, rows) {
+        const blockCondition = {
+            _id: rows[0]._id
+        }
+        blockModel.findOneAndUpdate(blockCondition, { $inc: { _numberOfBlocks: 1 } }, function (err4, rows4) {
+
+        })
+    })
+
+}
+exports.WorkOnBlock = WorkOnBlock;
+
+let SyncBlock = function () {
+    var deferred = Q.defer();
+    blockModel.find({}, function (err, rows) {
+        if (err) {
+            return;
+        }
+        if (rows.length > 0) {
+            const numberOfBlockHaveReceive = rows[0]._numberOfBlocks;
+            request('https://api.kcoin.club/blocks', function (error, response, body) {
+                if (error) {
+                    console.log(error);
+                    return read.status(500).send("Không thể lấy thông tin các block từ Blockchain");
+                } else {
+                    var sumOfBlockNow = response.headers['x-total-count'];
+                    console.log(sumOfBlockNow);
+                    if (sumOfBlockNow > numberOfBlockHaveReceive) {
+                        const diff = sumOfBlockNow - numberOfBlockHaveReceive;
+                        var nLoop = Math.floor((diff / 100));
+                        if (diff % 100 != 0) {
+                            nLoop = nLoop + 1;
+                        }
+                        console.log(diff);
+                        console.log(nLoop);
+                        var newOffset = numberOfBlockHaveReceive;
+                        for (i = 0; i < nLoop; i++) {
+                            console.log(newOffset);
+                            request('https://api.kcoin.club/blocks?offset=' + newOffset, function (error, response, body) {
+                                const blockList = JSON.parse(body);
+                                console.log(blockList);
+                                for (h = 0; h < blockList.length; h++) {
+                                    WorkOnBlock(blockList[h]);
+                                }
+                            })
+                            newOffset = newOffset + 100;
+                        }
+                    }
+
+                }
+            })
+        }
+    })
+    return deferred.promise;
+}
+exports.SyncBlock = SyncBlock;

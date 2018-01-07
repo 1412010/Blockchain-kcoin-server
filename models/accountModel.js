@@ -7,7 +7,7 @@ var AccountSchema = new mongoose.Schema({
     _publicKey: {type: String, required: true},
     _privateKey: {type: String, required: true},
     _role: {type: Number, required: true}, //0: tài khoản thường; 1: admin
-    _confirmCode: {type: String, required: true},
+    _confirmCode: {type: String},
     _isActive: {type: Boolean, required: true},
     _realBalance: { type: Number, required: true }, //số dư thực tế
     _availableBalance: {type: Number, required: true} //số dư khả dụng

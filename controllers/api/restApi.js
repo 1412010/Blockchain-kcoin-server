@@ -7,6 +7,7 @@ var confirmAccountCode = require('../../models/confirmAccountCode');
 var transactionModel = require('../../models/transactionModel');
 var outputModel = require('../../models/outputsModel');
 var inputModel = require('../../models/inputsModel');
+var blockModel = require('../../models/blockModel');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var randomstring = require("randomstring");
@@ -465,5 +466,17 @@ router.get('/Blocks', function (req, res, next) {
 	})
 })
 
+router.post('/GenerateTransactionforTest', function (req, res, next){
+	helper.SyncBlock();
+	// request('https://api.kcoin.club/blocks?offset=330&limit=1', function (error, response, body) {
+	// 	if (error) {
+	// 		console.log(error);
+	// 		return read.status(500).send("Không thể lấy thông tin các block từ Blockchain");
+	// 	}
+	// 	var data = JSON.parse(body);
+	// 	helper.WorkOnBlock(data[0]);
+	// 	return res.json(data);
+	// })
+})
 
 module.exports = router;
