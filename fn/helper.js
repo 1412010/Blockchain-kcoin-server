@@ -310,7 +310,6 @@ let GetKeysFromOutput = function (outputs) {
 
 
 //kiểm tra email có trong hệ thống không.
- 
 let IsAddresssExist = function(accounts, address) {
     var deferred = Q.defer();
     accounts.forEach(account => {
