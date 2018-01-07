@@ -59,7 +59,7 @@ let GetListOutputs = function (value) {
             }
 
         } else {
-            deferred.resolve(null);
+            return deferred.resolve(null);
         }
 
     })
