@@ -423,6 +423,35 @@ router.post('/GetAllAccounts', function (req, res, next) {
 	}
 })
 
+router.post('/DeleteTransaction', function(req, res, next){
+	if(req.isAuthendicated){
+		const condition = {
+			_id: req.body._id,//id transaction
+			_state: KHOITAO,
+			_inputAddress: req.body.address
+		}
+		console.log(condition);
+		transactionModel.findOneAndRemove(condition, function(err, rows){
+			console.log(rows);
+			if (err) {
+				console.log(err);
+				return res.status(500).send("Lỗi!");
+			}
+			if (rows != null) {
+				const result = {
+					mess: "Xóa thành công",
+					_id: rows._id
+				}
+				return res.json(result);
+			} else {
+				return res.status(404).send("Không thể xóa transaction!");
+			}
+		})
+	} else {
+		return res.status(403).send("Chưa đăng nhập!");
+	}
+})
+
 //Lấy các block từ Blockchain
 router.get('/Blocks', function (req, res, next) {
 	request('https://api.kcoin.club/blocks', function (error, response, body) {
