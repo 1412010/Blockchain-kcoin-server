@@ -121,11 +121,7 @@ router.put('/Register', function (req, res, next) {
 
 
 //Lấy thông tin tài khoản
-<<<<<<< HEAD
-router.get('/Address', function (req, res) {
-=======
 router.get('/:address', function (req, res) {
->>>>>>> 7c9939e13aa5c04a7a0105e9ef8a10061085d2d2
 	accountModel.find(req.params.address, function (error, account) {
 		if (error) {
 			console.log(error);
