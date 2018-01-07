@@ -309,46 +309,144 @@ let GetKeysFromOutput = function (outputs) {
 // }
 
 
-/*kiểm tra email có trong hệ thống không.
-    Giá trị trả về:
-        -1: lỗi
-        0: không tồn tại
-        1: tồn tại*/
-let IsAddresssExist = function(address) {
-	accountModel.find({ _address: address }, function (error, account) {
-		if (error) {
-            console.log("Lỗi khi kiểm tra address nhận từ websocket\nAddress: " + address);
-			return -1;
-        }
-        if (account.length === 0) {
-            console.log("Không tìm thấy address " + address);
-            return 0;
+//kiểm tra email có trong hệ thống không.
+ 
+let IsAddresssExist = function(accounts, address) {
+    var deferred = Q.defer();
+    accounts.forEach(account => {
+        if (account._address === address) {
+            return deferred.resolve(true);
         }
     })
-    console.log("Address " + address + " có tồn tại");
-    return 1;
+    return deferred.resolve(false);
+
+    return deferred.promise;
 }
 
 exports.IsAddresssExist = IsAddressExist;
 
-/*kiểm tra transaction có trong hệ thống không.
-    Giá trị trả về:
-        -1: lỗi
-        0: không tồn tại
-        1: tồn tại*/
-let IsTransactionExist = function(hash) {
-	transactionModel.find({ _hash: hash }, function (error, transaction) {
-		if (error) {
-            console.log("Lỗi khi kiểm tra transaction nhận từ websocket\nHash: " + hash);
-			return -1;
-        }
-        if (transaction.length === 0) {
-            console.log("Không tìm thấy transaction có hash " +hash);
-            return 0;
+
+//kiểm tra transaction có trong hệ thống không.
+
+let IsTransactionExist = function(transactions, hash) {
+    var deferred = Q.defer();
+    transactions.forEach(transaction => {
+        if (transaction._hash === hash) {
+            return deferred.resolve(true);
         }
     })
-    console.log("Transaction có hash" + hash + " có tồn tại");
-    return 1;
+    return deferred.resolve(false);
+
+    return deferred.promise;
 }
 
 exports.IsTransactionExist = IsTransactionExist;
+
+
+let GetAccounts = function() {
+    var deferred = Q.defer();
+    accountModel.find({}, function (error, data) {
+		if (error) {
+            console.log("Lỗi khi lấy danh sách account");
+			return deferred.resolve(null);
+        }
+        else {
+            return deferred.resolve(data);
+        }
+    })
+    return deferred.promise;
+}
+
+exports.GetAccounts = GetAccounts;
+
+
+let GetTransactions = function() {
+    var deferred = Q.defer();
+    transactionModel.find({}, function (error, data) {
+		if (error) {
+            console.log("Lỗi khi lấy danh sách transaction");
+			return deferred.resolve(null);
+        }
+        else {
+            return deferred.resolve(data);
+        }
+    })
+    return deferred.promise;
+}
+
+exports.GetTransactions = GetTransactions;
+
+let UpdateTransaction = function(hash, data) {
+    var deferred = Q.defer();
+
+    transationModel.findOneAndUpdate({_hash: hash}, data, {new: true}, function(error, updatedData){
+        if (error) {
+            return deferred.resolve(null);
+        }
+        else {
+            return deferred.resolve(updatedData);
+        }
+    })
+
+    return deferred.promise;
+}
+
+exports.UpdateTransaction = UpdateTransaction;
+
+
+let UpdateRealBalance = function(address, amount) {
+    var deferred = Q.defer();
+    accountModel.findOneAndUpdate({_address: address}, {$inc: {_realBalance: amount}}, {new: true}, function(error, updatedData){
+        if (error) {
+            return deferred.resolve(null);
+        }
+        else {
+            return deferred.resolve(updatedData);
+        }
+    })
+    return deferred.promise;
+}
+exports.UpdateRealBalance = UpdateRealBalance;
+
+
+let UpdateAvailableBalance = function(address, amount) {
+    var deferred = Q.defer();
+    accountModel.findOneAndUpdate({_address: address}, {$inc: {_availableBalance: amount}}, {new: true}, function(error, updatedData){
+        if (error) {
+            return deferred.resolve(null);
+        }
+        else {
+            return deferred.resolve(updatedData);
+        }
+    })
+    return deferred.promise;
+}
+exports.UpdateAvailableBalance = UpdateAvailableBalance;
+
+
+let AddOutput = function(data) {
+    var deferred = Q.defer();
+    outputModel.create(data, function(error, output) {
+        if (error) {
+            return deferred.resolve(null);
+        }
+        else return deferred.resolve(output);
+    });
+    return deferred.promise;
+}
+
+exports.AddOutput = AddOutput;
+
+
+let AddTransaction = function(data) {
+    var deferred = Q.defer();
+    transationModel.create(data, function(error, transaction) {
+        if (error) {
+            return deferred.resolve(null);
+        }
+        else return deferred.resolve(transaction);
+    });
+    return deferred.promise;
+}
+
+exports.AddTransaction = AddTransaction;
