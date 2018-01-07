@@ -434,6 +434,7 @@ router.get('/Blocks', function (req, res, next) {
 		console.log(data);
 		return res.json(data);
 	})
+})
 
 
 module.exports = router;

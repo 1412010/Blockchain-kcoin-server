@@ -14,7 +14,7 @@ let GetListOutputs = function (value) {
     var deferred = Q.defer();
     outputModel.find({}, function (error, rows) {
         if (error) {
-            deferred.resolve(null);
+            return deferred.resolve(null);
         }
         if (rows.length > 0) {
             var outputs = [];
@@ -37,7 +37,7 @@ let GetListOutputs = function (value) {
                 }
             });
             if (sumValue < value && biggerOutput == null) {//nếu tổng các giá trị output nhỏ bé hơn giá trị và không có output lớn hơn giá trị
-                deferred.resolve(null);
+                return deferred.resolve(null);
             } else {//hoặc là sumValue >= vaule hoặc biggerOutput != null
                 var resultOutputs = [];
                 if (sumValue < value) {//trả về biggerOutput nếu tổng các output nhỏ không đủ
@@ -54,12 +54,12 @@ let GetListOutputs = function (value) {
                             keys,
                             sumValue
                         }
-                        deferred.resolve(data);
+                        return deferred.resolve(data);
                     })
             }
 
         } else {
-            deferred.resolve(null);
+            return deferred.resolve(null);
         }
 
     })
