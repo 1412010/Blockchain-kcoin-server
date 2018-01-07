@@ -9,6 +9,8 @@ var express = require('express'),
     CORS = require('cors');
 var app = express();
 var helper = require('../../fn/helper');
+var accountModel = require('../models/accountModel');
+var transationModel = require('../models/transactionModel');
 
 app.use(CORS());
 app.use(morgan('dev'));
@@ -47,7 +49,7 @@ ws.onopen = function() {
 
 ws.onmessage = function(data) {
     console.log(data);
-    OnReceivedData(data);
+    OnReceiveData(data);
 };
 
 ws.onerror = function() {
@@ -63,22 +65,60 @@ function KeepAlive() {
     setTimeout(KeepAlive, 30000);
 }
 
-function OnReceivedData(data) {
+function OnReceiveData(data) {
     if (data.type === 'block'){
-        data.data.transactions.forEach(transaction => {
-            transaction.outputs.forEach(output => {
-                var parts = output.lockScript.split(' ');
-                var receiveAddress = parts[1];
-                if (helper.IsAddressExist(receiveAddress) == 1) {
-                    if (helper.IsTransactionExist(transaction.hash) == 1) {
-                        
-                    }
-                }
-            });
-        });
+        WorkOnBlock(data.data);
     }
 }
 //------------------------------------
+
+function WorkOnBlock(block) {
+    var accounts = helper.GetAccount();
+    var transactions = helper.GetTransactions();
+
+    block.transactions.forEach(transaction => {
+        transaction.outputs.forEach((output, index) => {
+            var parts = output.lockScript.split(' ');
+            var receiveAddress = parts[1];
+            if (helper.IsAddressExist(accounts, receiveAddress)) {
+                if (helper.IsTransactionExist(transactions, transaction.hash)) {
+
+                    var data = {
+                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
+                        _state: 'HOÀN THÀNH'
+                    }
+                    helper.UpdateTransaction(transaction.hash, data);
+                    helper.UpdateAvalableBalance(receiveAddress, output.value); 
+                }
+                else {
+                    transactionData = {
+                        _hash: transaction.hash,
+                        _inputAddress: "",
+                        _outputAddress: receiveAddress,
+                        _value: output.value,
+                        _confirmCode: "",
+                        _state: 'HOÀN THÀNH',
+                        _dateInit: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
+                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss')
+                    }
+                    helper.AddTransaction(transactionData);
+
+                    helper.UpdateAvalableBalance(receiveAddress, output.value); 
+                    helper.UpdateRealBalance(receiveAddress, output.value); 
+                }
+                
+                var outputData = {
+                    _hash: transaction.hash,
+                    _output: receiveAddress,
+                    _index: index,
+                    _value: output.value,
+                    _canBeUsed: true
+                }
+                helper.AddOutput(outputData);
+            }
+        });
+    });
+}
 
 
 app.listen(process.env.PORT || 3000, function () {
