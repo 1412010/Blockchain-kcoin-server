@@ -151,6 +151,29 @@ router.post('/ConfirmAccount', function (req, res, next) {
 	});
 });
 
+
+//Lấy thông tin tài khoản
+router.get('/account/:address', function (req, res) {
+	accountModel.find(req.params.address, function (error, account) {
+		if (error) {
+			console.log(error);
+			return res.status(500).send(error);
+		}
+		if (account) {
+			var data = {
+				realBalance: account._realBalance,
+				availableBalance: account._availableBalance,
+				address: account._address,
+				email: account._email
+			}
+			console.log(data);
+			return res.json(data);
+		}
+		return res.status(500).send("Xảy ra lỗi khi lấy thông tin tài khoản");
+	})
+});
+
+
 router.get('/checkLogin', function (req, res, next) {
 	console.log(req.user);
 	if (req.isAuthenticated && req.user) {
