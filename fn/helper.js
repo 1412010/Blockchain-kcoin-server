@@ -310,7 +310,6 @@ let GetKeysFromOutput = function (outputs) {
 
 
 //kiểm tra email có trong hệ thống không.
- 
 let IsAddresssExist = function(accounts, address) {
     var deferred = Q.defer();
     accounts.forEach(account => {
@@ -323,7 +322,7 @@ let IsAddresssExist = function(accounts, address) {
     return deferred.promise;
 }
 
-exports.IsAddresssExist = IsAddressExist;
+exports.IsAddresssExist = IsAddresssExist;
 
 
 //kiểm tra transaction có trong hệ thống không.

@@ -8,9 +8,10 @@ var express = require('express'),
     dbConnect = require('./fn/dbConnection'),
     CORS = require('cors');
 var app = express();
-var helper = require('../../fn/helper');
-var accountModel = require('../models/accountModel');
-var transationModel = require('../models/transactionModel');
+var helper = require('./fn/helper');
+var accountModel = require('./models/accountModel');
+var transationModel = require('./models/transactionModel');
+
 
 app.use(CORS());
 app.use(morgan('dev'));
@@ -35,7 +36,6 @@ app.use(bodyParser.urlencoded({
 
 app.use('/api/restApi', restApi);
 
-app.use('/account/', accountController);
 
 //Web Socket--------------------------
 const WebSocket = require('ws');
