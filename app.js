@@ -47,6 +47,7 @@ ws.onopen = function() {
 
 ws.onmessage = function(data) {
     console.log(data);
+    OnReceivedData(data);
 };
 
 ws.onerror = function() {
@@ -60,6 +61,14 @@ ws.onclose = function() {
 function KeepAlive() {
     ws.send("Keep me alive");
     setTimeout(KeepAlive, 30000);
+}
+
+function OnReceivedData(data) {
+    if (data.type === 'block'){
+        data.data.transactions.forEach(element => {
+            
+        });
+    }
 }
 //------------------------------------
 
