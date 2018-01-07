@@ -8,6 +8,7 @@ var express = require('express'),
     dbConnect = require('./fn/dbConnection'),
     CORS = require('cors');
 var app = express();
+var helper = require('../../fn/helper');
 
 app.use(CORS());
 app.use(morgan('dev'));
@@ -32,6 +33,8 @@ app.use(bodyParser.urlencoded({
 
 app.use('/api/restApi', restApi);
 
+app.use('/account/', accountController);
+
 //Web Socket--------------------------
 const WebSocket = require('ws');
 
@@ -44,6 +47,7 @@ ws.onopen = function() {
 
 ws.onmessage = function(data) {
     console.log(data);
+    OnReceivedData(data);
 };
 
 ws.onerror = function() {
@@ -57,6 +61,22 @@ ws.onclose = function() {
 function KeepAlive() {
     ws.send("Keep me alive");
     setTimeout(KeepAlive, 30000);
+}
+
+function OnReceivedData(data) {
+    if (data.type === 'block'){
+        data.data.transactions.forEach(transaction => {
+            transaction.outputs.forEach(output => {
+                var parts = output.lockScript.split(' ');
+                var receiveAddress = parts[1];
+                if (helper.IsAddressExist(receiveAddress) == 1) {
+                    if (helper.IsTransactionExist(transaction.hash) == 1) {
+                        
+                    }
+                }
+            });
+        });
+    }
 }
 //------------------------------------
 
