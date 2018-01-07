@@ -2,6 +2,7 @@ var request = require('request');
 var express = require('express');
 var router = express.Router();
 var moment = require('moment');
+var passport = require('passport');
 var accountModel = require('../../models/accountModel');
 var confirmAccountCode = require('../../models/confirmAccountCode');
 var transactionModel = require('../../models/transactionModel');
@@ -117,8 +118,8 @@ router.put('/Register', function (req, res, next) {
 
 
 //Lấy thông tin tài khoản
-router.get('/Address', function(req, res) {
-	accountModel.find(req.params.address, function(error, account) {
+router.get('/Address', function (req, res) {
+	accountModel.find(req.params.address, function (error, account) {
 		if (error) {
 			console.log(error);
 			return res.status(500).send(error);
@@ -126,7 +127,7 @@ router.get('/Address', function(req, res) {
 		if (account) {
 			var data = {
 				realBalance: account._realBalance,
-				availableBalance:account._availableBalance,
+				availableBalance: account._availableBalance,
 				address: account._address,
 				email: account._email
 			}
@@ -169,48 +170,33 @@ router.post('/ConfirmAccount', function (req, res, next) {
 	});
 });
 
+router.get('/checkLogin', function (req, res, next) {
+	console.log(req.user);
+	if (req.isAuthenticated && req.user) {
+		console.log(req.user);
+		return res.json(req.user);
+	}
+	else return res.status(401);
+});
 
-router.post('/Login', function (req, res, next) {
-	var ePass = crypto.createHash('md5').update(req.body.password).digest('hex');
-	var condition = {
-		_email: req.body.email,
-		_password: ePass
-	};
-	accountModel.find(condition, function (error, row) {
-		if (error) {
-			console.log(error);
-			return res.status(500).send("Đăng nhập thất bại!");
-		}
 
-		if (row.length == 0) {
-			return res.status(400).send("Email hoặc Password không đúng");
-		} else {
-			if (row[0]._isActive) {
-				var payload = {
-					_email: row[0]._email,
-					_address: row[0]._address,
-					_role: row[0]._role,
-					_realBalance: row[0]._realBalance,
-					_availableBalance: row[0]._availableBalance
-				};
-				var token = jwt.sign(payload, secretKey);
-				var result = {
-					data: payload,
-					token: token
-				};
-				console.log(result);
-				return res.json(result);
-			} else {
-				return res.status(403).send("Tài khoản chưa kích hoạt!");
-			}
-		}
-	});
-})
+router.post('/Login',
+	passport.authenticate('local.login', { failureRedirect: '/Login', failureFlash: true }),
+	function (req, res, next) {
+		res.json(req.user);
+	}
+)
+.get('/Login', function (req, res, next) {
+	//console.log(req.flash());
+	var msg = req.flash('message')[0];
+	console.log(msg);
+	res.status(401).json({ message: msg });
+});
 
 //khởi tạo transaction chờ xác nhận
 router.post('/Transaction', function (req, res, next) {
 	var inputAddress = req.body.inputAddress;//tài khoản yêu cầu gửi
-
+	
 	const condition = {
 		_address: inputAddress
 	}
