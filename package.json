@@ -41,6 +41,7 @@
     "randomstring": "^1.1.5",
     "request": "^2.83.0",
     "serve-favicon": "^2.4.2",
+    "ursa": "^0.9.4",
     "wnumb": "^1.1.0",
     "ws": "^3.3.3"
   }
