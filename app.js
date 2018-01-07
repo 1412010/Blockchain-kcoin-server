@@ -5,6 +5,7 @@ var express = require('express'),
     path = require('path'),
     //MapController = require('./controllers/MapController');
     restApi = require('./controllers/api/restApi'),
+    accountController = require('./controllers/accountController'),
     dbConnect = require('./fn/dbConnection'),
     CORS = require('cors');
 var app = express();
@@ -31,6 +32,8 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use('/api/restApi', restApi);
+
+app.use('/account/', accountController);
 
 //Web Socket--------------------------
 const WebSocket = require('ws');
