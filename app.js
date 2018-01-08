@@ -13,7 +13,7 @@ var express = require('express'),
 var app = express();
 var helper = require('./fn/helper');
 var accountModel = require('./models/accountModel');
-var transationModel = require('./models/transactionModel');
+var transactionModel = require('./models/transactionModel');
 
 
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
@@ -53,10 +53,11 @@ const ws = new WebSocket('wss://api.kcoin.club/');
 ws.onopen = function () {
     console.log('Opened');
     KeepAlive();
+    helper.SyncBlock();
 };
 
 ws.onmessage = function (data) {
-    //console.log(data);
+    console.log(data);
     OnReceiveData(data);
 };
 
@@ -74,59 +75,16 @@ function KeepAlive() {
 }
 
 function OnReceiveData(data) {
-    if (data.type === 'block'){
-        WorkOnBlock(data.data);
+    const jsonData = JSON.parse(data.data);
+    console.log(jsonData.type);
+    if (jsonData.type === 'block') {
+        helper.WorkOnBlock(jsonData.data);
+    }
+    if(jsonData.type === 'transaction'){
+        console.log("Loại transaction");
     }
 }
 //------------------------------------
-
-function WorkOnBlock(block) {
-    var accounts = helper.GetAccount();
-    var transactions = helper.GetTransactions();
-
-    block.transactions.forEach(transaction => {
-        transaction.outputs.forEach((output, index) => {
-            var parts = output.lockScript.split(' ');
-            var receiveAddress = parts[1];
-            if (helper.IsAddressExist(accounts, receiveAddress)) {
-                if (helper.IsTransactionExist(transactions, transaction.hash)) {
-
-                    var data = {
-                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
-                        _state: 'HOÀN THÀNH'
-                    }
-                    helper.UpdateTransaction(transaction.hash, data);
-                    helper.UpdateAvalableBalance(receiveAddress, output.value); 
-                }
-                else {
-                    transactionData = {
-                        _hash: transaction.hash,
-                        _inputAddress: "",
-                        _outputAddress: receiveAddress,
-                        _value: output.value,
-                        _confirmCode: "",
-                        _state: 'HOÀN THÀNH',
-                        _dateInit: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
-                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss')
-                    }
-                    helper.AddTransaction(transactionData);
-
-                    helper.UpdateAvalableBalance(receiveAddress, output.value); 
-                    helper.UpdateRealBalance(receiveAddress, output.value); 
-                }
-                
-                var outputData = {
-                    _hash: transaction.hash,
-                    _output: receiveAddress,
-                    _index: index,
-                    _value: output.value,
-                    _canBeUsed: true
-                }
-                helper.AddOutput(outputData);
-            }
-        });
-    });
-}
 
 
 app.listen(process.env.PORT || 5000, function () {
