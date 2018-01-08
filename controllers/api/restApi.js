@@ -308,7 +308,6 @@ router.post('/Transaction', function (req, res, next) {
 							});
 							const result = {
 								mess: "Khởi tạo giao dịch thành công.",
-								data: row1
 							}
 							return res.json(result);
 						}
