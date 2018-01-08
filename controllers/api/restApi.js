@@ -537,8 +537,8 @@ router.post('/GenerateTransactionforTest', function (req, res, next){
 	//danh sách input từ output khả dụng
 
 		bountyTransaction.inputs.push({
-			referencedOutputHash: "51a2c1abc594f217ee6fa72e6debe7fb7b781036dec4aa309bca5bed40b70ca7",
-			referencedOutputIndex: 1,
+			referencedOutputHash: "d3f9dbacdd14a69dd6c2aa5ed1d2b081a32c69d25893d9f2417b667202c3e407",
+			referencedOutputIndex: 0,
 			unlockScript: ''
 		})
 	// // Change because reference output must be use all value
