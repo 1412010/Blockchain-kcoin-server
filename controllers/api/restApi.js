@@ -250,9 +250,9 @@ router.post('/forgotPassword', function (req, res, next) {
 					console.log(error);
 				} else {
 					console.log("Message sent: " + response.message);
+					return res.json(updatedData);
 				}
-			});
-			return res.json(updatedData);
+			});	
 		}
 		else {
 			console.log("Email không hợp lệ");
