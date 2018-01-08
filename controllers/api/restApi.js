@@ -179,28 +179,6 @@ router.post('/ConfirmAccount', function (req, res, next) {
 });
 
 
-//Lấy thông tin tài khoản
-router.get('/account/:address', function (req, res) {
-	accountModel.find(req.params.address, function (error, account) {
-		if (error) {
-			console.log(error);
-			return res.status(500).send(error);
-		}
-		if (account) {
-			var data = {
-				realBalance: account._realBalance,
-				availableBalance: account._availableBalance,
-				address: account._address,
-				email: account._email
-			}
-			console.log(data);
-			return res.json(data);
-		}
-		return res.status(500).send("Xảy ra lỗi khi lấy thông tin tài khoản");
-	})
-});
-
-
 router.get('/checkLogin', function (req, res, next) {
 	//console.log(req.user);
 	if (req.isAuthenticated() && req.user) {
@@ -263,11 +241,14 @@ router.post('/forgotPassword', function (req, res, next) {
 
 
 router.get('/transaction/:hash', function (req, res, next) {
-	transactionModel.find({_hash: req.params.hash}, function (error, transaction) {
-		if (transaction.length > 0)
-        	return res.status(200).json(transaction);
+	request('https://api.kcoin.club/transactions/' + req.params.hash, function (error, response, body) {
+		if (body.length > 0) {
+			var data = JSON.parse(body);
+			return res.status(200).json(data);
+		}
+		console.log(error);
+			return read.status(500).json({ message: "Không tìm được transaction" });
 	});
-	return res.status(404).json({ message: "Không tìm thấy transaction "});
 })
 
 
