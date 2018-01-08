@@ -254,107 +254,114 @@ router.get('/transaction/:hash', function (req, res, next) {
 
 //khởi tạo transaction chờ xác nhận
 router.post('/Transaction', function (req, res, next) {
-	var inputAddress = req.body.inputAddress;//tài khoản yêu cầu gửi
+	if (req.isAuthenticated() && req.user) {
+		var inputAddress = req.user.address//tài khoản yêu cầu gửi
 
-	const condition = {
-		_address: inputAddress
-	}
-	accountModel.find(condition, function (error, row) {
-		if (error) {
-			return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" });
+		const condition = {
+			_address: inputAddress
 		}
-		if (row.length > 0) {
-			var outputAddress = req.body.outputAddress;//địa chỉ nhận
-			var value = req.body.value;
-			if (value > row[0]._availableBalance) {
-				return res.status(400).json({ message: "Số tiền rút không đủ!" })
-			} else {
-
-				const confirmCode = randomstring.generate(10);
-				const dateInit = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
-				const data = {
-					_hash: "",
-					_inputAddress: inputAddress,
-					_outputAddress: outputAddress,
-					_value: value,
-					_confirmCode: confirmCode,
-					_state: KHOITAO,
-					_dateInit: dateInit
-				}
-
-				transactionModel.create(data, function (error, row1) {
-					if (error) {
-						return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" })
-					} else {
-						const email = row[0]._email;
-						//gửi mã xác nhận
-						var text = "Tài khoản bạn đã yêu cầu thực rút tiền đến tài khoản: " + outputAddress;
-						text += "\n " + "Vui lòng xác nhận với mã: " + confirmCode;
-						var mailOptions = {
-							from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
-							to: email, // list of receivers
-							subject: "Mã xác nhận giao dịch BlockChain", // Subject line
-							text: text // plaintext body
-						};
-						console.log(mailOptions);
-
-						smtpTransport.sendMail(mailOptions, function (error, response) {
-							if (error) {
-								console.log(error);
-							} else {
-								console.log("Message sent: " + response.message);
-							}
-						});
-						const result = {
-							mess: "Khởi tạo giao dịch thành công.",
-							data: row1
-						}
-						return res.json(result);
-					}
-				});
+		accountModel.find(condition, function (error, row) {
+			if (error) {
+				return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" });
 			}
-		}
-	});
+			if (row.length > 0) {
+				var outputAddress = req.body.outputAddress;//địa chỉ nhận
+				var value = req.body.value;
+				if (value > row[0]._availableBalance) {
+					return res.status(400).json({ message: "Số tiền rút không đủ!" })
+				} else {
+
+					const confirmCode = randomstring.generate(10);
+					const dateInit = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+					const data = {
+						_hash: "",
+						_inputAddress: inputAddress,
+						_outputAddress: outputAddress,
+						_value: value,
+						_confirmCode: confirmCode,
+						_state: KHOITAO,
+						_dateInit: dateInit
+					}
+
+					transactionModel.create(data, function (error, row1) {
+						if (error) {
+							return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" })
+						} else {
+							const email = row[0]._email;
+							//gửi mã xác nhận
+							var text = "Tài khoản bạn đã yêu cầu thực rút tiền đến tài khoản: " + outputAddress;
+							text += "\n " + "Vui lòng xác nhận với mã: " + confirmCode;
+							var mailOptions = {
+								from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
+								to: email, // list of receivers
+								subject: "Mã xác nhận giao dịch BlockChain", // Subject line
+								text: text // plaintext body
+							};
+							console.log(mailOptions);
+
+							smtpTransport.sendMail(mailOptions, function (error, response) {
+								if (error) {
+									console.log(error);
+								} else {
+									console.log("Message sent: " + response.message);
+								}
+							});
+							const result = {
+								mess: "Khởi tạo giao dịch thành công.",
+								data: row1
+							}
+							return res.json(result);
+						}
+					});
+				}
+			}
+		});
+	} else {
+		return res.status(403).json({ message: "Chưa đăng nhập!" });
+	}
 
 })
 
 //Xác nhận transaction và thực hiện post lên api
 router.post('/ConfirmTransaction', function (req, res, next) {
-
-	const confirmCode = req.body.code;
-	const condition = {
-		_confirmCode: confirmCode,
-		_state: KHOITAO
-	}
-	//Tìm giao dịch có mã xác nhận tương ứng
-	transactionModel.find(condition, function (error, row) {
-		if (error) {
-			return res.status(400).json({ message: "Xác thực thất bại!" });
+	if (req.isAuthenticated() && req.user) {
+		const confirmCode = req.body.code;
+		const condition = {
+			_confirmCode: confirmCode,
+			_state: KHOITAO
 		}
-		if (row.length > 0) {
-			const condition2 = {
-				_address: row[0]._inputAddress
+		//Tìm giao dịch có mã xác nhận tương ứng
+		transactionModel.find(condition, function (error, row) {
+			if (error) {
+				return res.status(400).json({ message: "Xác thực thất bại!" });
 			}
-			//Tìm tài khoản rút tiền
-			accountModel.find(condition2, function (error1, acc) {
-				if (error1) {
-					return res.status(400).json({ message: "Thực hiện giao dịch thất bại!" });
+			if (row.length > 0) {
+				const condition2 = {
+					_address: row[0]._inputAddress
 				}
-				if (acc.length > 0) {
-					if (acc[0]._availableBalance < row[0]._value) {//kiểm tra số dư khả dụng
-						return res.status(400).json({ message: "Thực hiện giao dịch thất bại! Số dư không đủ!" });
-					} else {
-						helper.HandleTransaction(row[0], acc[0])
-							.then(function (transaction) {
-								return res.json(transaction);
-							})
+				//Tìm tài khoản rút tiền
+				accountModel.find(condition2, function (error1, acc) {
+					if (error1) {
+						return res.status(400).json({ message: "Thực hiện giao dịch thất bại!" });
 					}
-				}
-			})
-		} else {//không tìm được giao dịch tương ứng
-			return res.status(400).json({ message: "Xác thực thất bại!" });
-		}
-	})
+					if (acc.length > 0) {
+						if (acc[0]._availableBalance < row[0]._value) {//kiểm tra số dư khả dụng
+							return res.status(400).json({ message: "Thực hiện giao dịch thất bại! Số dư không đủ!" });
+						} else {
+							helper.HandleTransaction(row[0], acc[0])
+								.then(function (transaction) {
+									return res.json(transaction);
+								})
+						}
+					}
+				})
+			} else {//không tìm được giao dịch tương ứng
+				return res.status(400).json({ message: "Xác thực thất bại!" });
+			}
+		})
+	} else {
+		return res.status(403).json({ message: "Chưa đăng nhập!" });
+	}
 
 	console.log("test2");
 })
@@ -390,7 +397,7 @@ router.post('/GetOwnTransactions', function (req, res, next) {
 })
 
 router.post('/GetSystemTransactions', function (req, res, next) {
-	if (req.isAuthendicated) {
+	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
 			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
 		} else {
@@ -412,7 +419,7 @@ router.post('/GetSystemTransactions', function (req, res, next) {
 })
 
 router.post('/GetSystemStatistic', function (req, res, next) {
-	if (req.isAuthendicated) {
+	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
 			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
 		} else {
@@ -445,7 +452,7 @@ router.post('/GetSystemStatistic', function (req, res, next) {
 })
 
 router.post('/GetAllAccounts', function (req, res, next) {
-	if (req.isAuthendicated) {
+	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
 			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
 		} else {
@@ -467,11 +474,11 @@ router.post('/GetAllAccounts', function (req, res, next) {
 })
 
 router.post('/DeleteTransaction', function (req, res, next) {
-	if (req.isAuthendicated) {
+	if (req.isAuthenticated() && req.user) {
 		const condition = {
 			_id: req.body._id,//id transaction
 			_state: KHOITAO,
-			_inputAddress: req.body.address
+			_inputAddress: req.user.address
 		}
 		console.log(condition);
 		transactionModel.findOneAndRemove(condition, function (err, rows) {
@@ -508,7 +515,7 @@ router.get('/Blocks', function (req, res, next) {
 	})
 })
 
-router.post('/GenerateTransactionforTest', function (req, res, next){
+router.post('/GenerateTransactionforTest', function (req, res, next) {
 	//Generate transacitons
 	let bountyTransaction = {
 		version: 1,
@@ -517,11 +524,11 @@ router.post('/GenerateTransactionforTest', function (req, res, next){
 	};
 	//danh sách input từ output khả dụng
 
-		bountyTransaction.inputs.push({
-			referencedOutputHash: "d3f9dbacdd14a69dd6c2aa5ed1d2b081a32c69d25893d9f2417b667202c3e407",
-			referencedOutputIndex: 0,
-			unlockScript: ''
-		})
+	bountyTransaction.inputs.push({
+		referencedOutputHash: "d3f9dbacdd14a69dd6c2aa5ed1d2b081a32c69d25893d9f2417b667202c3e407",
+		referencedOutputIndex: 0,
+		unlockScript: ''
+	})
 	// // Change because reference output must be use all value
 
 	bountyTransaction.outputs.push({
@@ -536,7 +543,7 @@ router.post('/GenerateTransactionforTest', function (req, res, next){
 	}
 	keys.push(key);
 	// Sign
-	transactions.sign(bountyTransaction,keys);
+	transactions.sign(bountyTransaction, keys);
 	return res.json(bountyTransaction);
 })
 
