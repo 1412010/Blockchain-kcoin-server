@@ -349,6 +349,9 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 						} else {
 							helper.HandleTransaction(row[0], acc[0])
 								.then(function (transaction) {
+									if(transaction == null){
+										return res.status(400).json({message: "Hệ thống hiện tại không đủ output để gửi! Xin thử lại sau!"});
+									}
 									return res.json(transaction);
 								})
 						}
@@ -496,6 +499,51 @@ router.post('/DeleteTransaction', function (req, res, next) {
 				return res.status(404).json({ message: "Không thể xóa transaction!" });
 			}
 		})
+	} else {
+		return res.status(403).json({ message: "Chưa đăng nhập!" });
+	}
+})
+
+router.post('/GetAllAddressSystem',  function (req, res, next){
+	if (req.isAuthenticated() && req.user) {
+		if (req.user.role == 0) {
+			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
+		} else {
+			accountModel.find({}, function (err, acccounts) {
+				if (err) {
+					console.log(err);
+					return res.status(500).json({ message: "Lỗi!" });
+				}
+				if (acccounts.length > 0) {
+
+					outputModel.find({}, function(err1, outputs){
+						if(err1){
+							return res.status(500).json({ message: "Lỗi!" });
+						}
+						var result = [];
+						if(outputs.length > 0){
+							for(i = 0; i < acccounts.length; i++){
+								var value = 0;
+								for(j = 0; j < outputs.length; j++){
+									if(acccounts._address == outputs._output && outputs._canBeUsed == true){
+										value = value + outputs._value;
+									}
+								}
+								const data = {
+									address: acccounts._address,
+									value: value
+								}
+								result.push(data);
+							}
+							return res.json(result);
+						}
+					})
+
+				} else {
+					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+				}
+			})
+		}
 	} else {
 		return res.status(403).json({ message: "Chưa đăng nhập!" });
 	}
