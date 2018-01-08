@@ -231,14 +231,11 @@ router.get('/Logout', function (req, res, next) {
 
 
 router.post('/forgotPassword', function (req, res, next) {
-	var newPass = randomstring.generate(8);
+	var newPass = randomstring.generate(6);
 	var ePass = crypto.createHash('md5').update(newPass).digest('hex');
 
 	accountModel.findOneAndUpdate({_email: req.body.email}, {_password: ePass}, {new: true}, function(error, updatedData){
-        if (error) {
-			console.log("Không thể cập nhật mật khẩu cho " + req.body.email);
-        }
-        else {    
+        if (updatedData.length > 0) {    
 			var text = "Mật khẩu mới của bạn là: " + newPass;
 			var mailOptions = {
 				from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
@@ -255,19 +252,22 @@ router.post('/forgotPassword', function (req, res, next) {
 					console.log("Message sent: " + response.message);
 				}
 			});
-        }
+			return res.json(updatedData);
+		}
+		else {
+			console.log("Email không hợp lệ");
+			return res.status(500).json({ message: "Email không hợp lệ"});
+		}
     })
 })
 
 
 router.get('/transaction/:hash', function (req, res, next) {
-	transactionModel.find({_hash: req.params.hash}, function (err, transaction) {
-        if (err)
-			return res.status(500).send("Lỗi xảy ra khi tìm kiếm transaction " + req.params.hash);
+	transactionModel.find({_hash: req.params.hash}, function (error, transaction) {
 		if (transaction.length > 0)
-        	return res.status(200).send(transaction);
+        	return res.status(200).json(transaction);
 	});
-	return res.status(404).send("Không tìm thấy transaction " + req.params.hash);
+	return res.status(404).json({ message: "Không tìm thấy transaction "});
 })
 
 
