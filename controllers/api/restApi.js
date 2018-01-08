@@ -179,28 +179,6 @@ router.post('/ConfirmAccount', function (req, res, next) {
 });
 
 
-//Lấy thông tin tài khoản
-router.get('/account/:address', function (req, res) {
-	accountModel.find(req.params.address, function (error, account) {
-		if (error) {
-			console.log(error);
-			return res.status(500).send(error);
-		}
-		if (account) {
-			var data = {
-				realBalance: account._realBalance,
-				availableBalance: account._availableBalance,
-				address: account._address,
-				email: account._email
-			}
-			console.log(data);
-			return res.json(data);
-		}
-		return res.status(500).send("Xảy ra lỗi khi lấy thông tin tài khoản");
-	})
-});
-
-
 router.get('/checkLogin', function (req, res, next) {
 	//console.log(req.user);
 	if (req.isAuthenticated() && req.user) {
@@ -231,14 +209,11 @@ router.get('/Logout', function (req, res, next) {
 
 
 router.post('/forgotPassword', function (req, res, next) {
-	var newPass = randomstring.generate(8);
+	var newPass = randomstring.generate(6);
 	var ePass = crypto.createHash('md5').update(newPass).digest('hex');
 
-	accountModel.findOneAndUpdate({ _email: req.body.email }, { _password: ePass }, { new: true }, function (error, updatedData) {
-		if (error) {
-			console.log("Không thể cập nhật mật khẩu cho " + req.body.email);
-		}
-		else {
+	accountModel.findOneAndUpdate({_email: req.body.email}, {_password: ePass}, {new: true}, function(error, updatedData){
+        if (updatedData.length > 0) {    
 			var text = "Mật khẩu mới của bạn là: " + newPass;
 			var mailOptions = {
 				from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
@@ -253,21 +228,27 @@ router.post('/forgotPassword', function (req, res, next) {
 					console.log(error);
 				} else {
 					console.log("Message sent: " + response.message);
+					return res.json(updatedData);
 				}
-			});
+			});	
 		}
-	})
+		else {
+			console.log("Email không hợp lệ");
+			return res.status(500).json({ message: "Email không hợp lệ"});
+		}
+    })
 })
 
 
 router.get('/transaction/:hash', function (req, res, next) {
-	transactionModel.find({ _hash: req.params.hash }, function (err, transaction) {
-		if (err)
-			return res.status(500).send("Lỗi xảy ra khi tìm kiếm transaction " + req.params.hash);
-		if (transaction.length > 0)
-			return res.status(200).send(transaction);
+	request('https://api.kcoin.club/transactions/' + req.params.hash, function (error, response, body) {
+		if (body.length > 0) {
+			var data = JSON.parse(body);
+			return res.status(200).json(data);
+		}
+		console.log(error);
+			return read.status(500).json({ message: "Không tìm được transaction" });
 	});
-	return res.status(404).send("Không tìm thấy transaction " + req.params.hash);
 })
 
 
