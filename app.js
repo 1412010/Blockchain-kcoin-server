@@ -1,7 +1,7 @@
 var express = require('express'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
-    session = require('cookie-session'),
+    session = require('express-session'),
     morgan = require('morgan'),
     path = require('path'),
     restApi = require('./controllers/api/restApi'),
@@ -32,8 +32,8 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 app.use(session({
     secret: 'cat',
-    // resave: false,
-    // saveUninitialized: false,
+    resave: false,
+    saveUninitialized: false,
     maxAge: 600000  // session lasts only 10 minutes
 }));
 app.use(flash());
@@ -56,7 +56,7 @@ ws.onopen = function () {
 };
 
 ws.onmessage = function (data) {
-    console.log(data);
+    //console.log(data);
     OnReceiveData(data);
 };
 

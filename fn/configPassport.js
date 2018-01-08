@@ -15,7 +15,6 @@ module.exports = function (app, passport) {
     // deserializing.
 
     passport.serializeUser((user, done) => {
-        console.log(user);
         done(null, user.email)
     });
 
@@ -31,7 +30,7 @@ module.exports = function (app, passport) {
             }
 
             if (row.length == 0) {
-                return done(null, false, { message: "Invalid email or Password" });
+                return done(null, false, req.flash('message', 'Invalid Email or Password'));
                 //return res.status(400).send("Invalid email or Password");
             } else {
                 if (row[0]._isActive) {
@@ -43,10 +42,10 @@ module.exports = function (app, passport) {
                         availableBalance: row[0]._availableBalance
                     };
                     // var token = jwt.sign(payload, secretKey);
-                    console.log(result);
+                    //console.log(result);
                     done(null, result);
                 } else {
-                    return done(null, false, { message: "Accont is not actived yet!" });
+                    return done(null, false, req.flash('message', "Account is not verified yet!"));
                     //return res.status(403).send("Accont is not actived yet!");
                 }
             }
@@ -73,7 +72,7 @@ module.exports = function (app, passport) {
 
             if (row.length == 0) {
                 console.log('Invalid');
-                return done(null, false, req.flash('message', 'Invalid email or Password'));
+                return done(null, false, req.flash('message', 'Invalid Email or Password'));
             } else {
                 if (row[0]._isActive) {
                     var result = {
@@ -87,7 +86,7 @@ module.exports = function (app, passport) {
                     //console.log(result);
                     done(null, result);
                 } else {
-                    return done(null, false, req.flash('message', "Account is not actived yet!"));
+                    return done(null, false, req.flash('message', "Account is not verified yet!"));
                 }
             }
         });
