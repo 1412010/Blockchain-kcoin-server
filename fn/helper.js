@@ -479,7 +479,7 @@ let WorkOnBlock = function (block) {
                                         _state: 'HOÀN THÀNH'
                                     }
                                     UpdateTransaction(transaction.hash, data);
-                                    UpdateAvailableBalance(receiveAddress, output.value);
+                                    UpdateAvailableBalance(transactions[j]._inputAddress, output.value);
                                 } else {
                                     console.log("transaction không thuộc hệ thống");
                                     transactionData = {
@@ -506,6 +506,26 @@ let WorkOnBlock = function (block) {
                                     _canBeUsed: true
                                 }
                                 AddOutput(outputData);
+                            } else {//transaction thuộc hệ thống nhưng không chứa output của hệ thống => transaction gửi từ hệ thống
+                                var isTransactionExist2 = false;
+                                console.log("Vào hệ xét địa chỉ");
+                                for (h = 0; h < transactions.length; h++) {//kiểm tra transaction có thuộc hệ thống không
+                                    console.log(transaction.hash);
+                                    console.log(transactions[h]._hash);
+                                    if (transaction.hash == transactions[h]._hash) {
+                                        isTransactionExist2 = true;
+                                        break;
+                                    }
+                                }
+                                console.log(isTransactionExist2);
+                                if (isTransactionExist2) {//transaction thuộc hệ thống
+                                    console.log("transaction thuộc hệ thống");
+                                    var data = {
+                                        _dateSuccess: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
+                                        _state: 'HOÀN THÀNH'
+                                    }
+                                    UpdateTransaction(transaction.hash, data);
+                                }
                             }
 
                         });
