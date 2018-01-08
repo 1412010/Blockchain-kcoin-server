@@ -246,6 +246,8 @@ let HandleTransaction = function (transaction, acc) {
                                 return deferred.resolve(resBody);
                             }
                         })
+                    } else {
+                        return deferred.resolve(null);
                     }
                 })
         }
