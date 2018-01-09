@@ -290,6 +290,7 @@ router.post('/Transaction', function (req, res, next) {
 							const email = row[0]._email;
 							//gửi mã xác nhận
 							var text = "Tài khoản bạn đã yêu cầu thực rút tiền đến tài khoản: " + outputAddress;
+							text += "\n " + "Số tiền: " + value;
 							text += "\n " + "Vui lòng xác nhận với mã: " + confirmCode;
 							var mailOptions = {
 								from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
@@ -570,15 +571,24 @@ router.post('/GenerateTransactionforTest', function (req, res, next) {
 	//danh sách input từ output khả dụng
 
 	bountyTransaction.inputs.push({
-		referencedOutputHash: "118e85d2d02bb71764784d345664862b586b7f6428ff67dd322492b1391faae5",
+		referencedOutputHash: "d12d0f5370e4390cd751640c732f6f74b8e349267e8c6acafb945fe8d5019c4e",
 		referencedOutputIndex: 0,
 		unlockScript: ''
 	})
 	// // Change because reference output must be use all value
+	bountyTransaction.outputs.push({
+		value: 8700,
+		lockScript: 'ADD ' + 'f9284e6961e91cab1e6e822a0391f9610d2bd0d342d6922590d1e363841a6435'
+	});
 
 	bountyTransaction.outputs.push({
-		value: 100,
-		lockScript: 'ADD ' + 'f78f987175d07d1693408d28c40b02a871bd7a6aa151575b911b7d6d4c5c4139'
+		value: 200,
+		lockScript: 'ADD ' + '6050cac7ddf70a3255ec1ebb90c7de199dc9e5fcc386c039c97cb55f9641b308'
+	});
+
+	bountyTransaction.outputs.push({
+		value: 200,
+		lockScript: 'ADD ' + 'd768b254cdd7435f9ba57b1cb4a8bd1cb6a845d1c672b5559746d0007447ed81'
 	});
 	var keys = [];
 	const key = {
