@@ -212,8 +212,8 @@ router.post('/forgotPassword', function (req, res, next) {
 	var newPass = randomstring.generate(6);
 	var ePass = crypto.createHash('md5').update(newPass).digest('hex');
 
-	accountModel.findOneAndUpdate({_email: req.body.email}, {_password: ePass}, {new: true}, function(error, updatedData){
-        if (updatedData.length > 0) {    
+	accountModel.findOneAndUpdate({ _email: req.body.email }, { _password: ePass }, { new: true }, function (error, updatedData) {
+		if (updatedData.length > 0) {
 			var text = "Mật khẩu mới của bạn là: " + newPass;
 			var mailOptions = {
 				from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
@@ -230,13 +230,13 @@ router.post('/forgotPassword', function (req, res, next) {
 					console.log("Message sent: " + response.message);
 					return res.json(updatedData);
 				}
-			});	
+			});
 		}
 		else {
 			console.log("Email không hợp lệ");
-			return res.status(500).json({ message: "Email không hợp lệ"});
+			return res.status(500).json({ message: "Email không hợp lệ" });
 		}
-    })
+	})
 })
 
 
@@ -247,7 +247,7 @@ router.get('/transaction/:hash', function (req, res, next) {
 			return res.status(200).json(data);
 		}
 		console.log(error);
-			return read.status(500).json({ message: "Không tìm được transaction" });
+		return read.status(500).json({ message: "Không tìm được transaction" });
 	});
 })
 
@@ -349,8 +349,8 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 						} else {
 							helper.HandleTransaction(row[0], acc[0])
 								.then(function (transaction) {
-									if(transaction == null){
-										return res.status(400).json({message: "Hệ thống hiện tại không đủ output để gửi! Xin thử lại sau!"});
+									if (transaction == null) {
+										return res.status(400).json({ message: "Hệ thống hiện tại không đủ output để gửi! Xin thử lại sau!" });
 									}
 									return res.json(transaction);
 								})
@@ -371,28 +371,25 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 router.post('/GetOwnTransactions', function (req, res, next) {
 	console.log(req.user);
 	if (req.isAuthenticated() && req.user) {
-		if (req.user.role == 0) {
-			var condition = {
-				$or: [
-					{ _inputAddress: req.user.address },
-					{ _outputAddress: req.user.address }
-				]
-			}
-			console.log(condition);
-			transactionModel.find(condition, null, { sort: { _dateInit: -1 } }, function (err, rows) {
-				if (err) {
-					console.log(err);
-					return res.status(500).json({ message: "Lỗi!" });
-				}
-				if (rows.length > 0) {
-					return res.json(rows);
-				} else {
-					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
-				}
-			})
-		} else {
-			return res.status(400).json({ message: "Chức năng không dùng cho tài khoản admin!" });
+		var condition = {
+			$or: [
+				{ _inputAddress: req.user.address },
+				{ _outputAddress: req.user.address }
+			]
 		}
+		console.log(condition);
+		transactionModel.find(condition, null, { sort: { _dateInit: -1 } }, function (err, rows) {
+			if (err) {
+				console.log(err);
+				return res.status(500).json({ message: "Lỗi!" });
+			}
+			if (rows.length > 0) {
+				return res.json(rows);
+			} else {
+				return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+			}
+		})
+
 	} else {
 		return res.status(403).json({ message: "Chưa đăng nhập!" });
 	}
@@ -504,7 +501,7 @@ router.post('/DeleteTransaction', function (req, res, next) {
 	}
 })
 
-router.post('/GetAllAddressSystem',  function (req, res, next){
+router.post('/GetAllAddressSystem', function (req, res, next) {
 	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
 			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
@@ -516,16 +513,16 @@ router.post('/GetAllAddressSystem',  function (req, res, next){
 				}
 				if (acccounts.length > 0) {
 
-					outputModel.find({}, function(err1, outputs){
-						if(err1){
+					outputModel.find({}, function (err1, outputs) {
+						if (err1) {
 							return res.status(500).json({ message: "Lỗi!" });
 						}
 						var result = [];
-						if(outputs.length > 0){
-							for(i = 0; i < acccounts.length; i++){
+						if (outputs.length > 0) {
+							for (i = 0; i < acccounts.length; i++) {
 								var value = 0;
-								for(j = 0; j < outputs.length; j++){
-									if(acccounts[i]._address == outputs[j]._output && outputs[j]._canBeUsed == true){
+								for (j = 0; j < outputs.length; j++) {
+									if (acccounts[i]._address == outputs[j]._output && outputs[j]._canBeUsed == true) {
 										value = value + outputs[j]._value;
 									}
 								}
@@ -573,7 +570,7 @@ router.post('/GenerateTransactionforTest', function (req, res, next) {
 	//danh sách input từ output khả dụng
 
 	bountyTransaction.inputs.push({
-		referencedOutputHash: "d3f9dbacdd14a69dd6c2aa5ed1d2b081a32c69d25893d9f2417b667202c3e407",
+		referencedOutputHash: "118e85d2d02bb71764784d345664862b586b7f6428ff67dd322492b1391faae5",
 		referencedOutputIndex: 0,
 		unlockScript: ''
 	})
