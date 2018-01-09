@@ -525,12 +525,13 @@ router.post('/GetAllAddressSystem',  function (req, res, next){
 							for(i = 0; i < acccounts.length; i++){
 								var value = 0;
 								for(j = 0; j < outputs.length; j++){
-									if(acccounts._address == outputs._output && outputs._canBeUsed == true){
-										value = value + outputs._value;
+									if(acccounts[i]._address == outputs[j]._output && outputs[j]._canBeUsed == true){
+										value = value + outputs[j]._value;
 									}
 								}
+								console.log("GET ALL ADDRESS SYSTEM " + acccounts[i]._address);
 								const data = {
-									address: acccounts._address,
+									address: acccounts[i]._address,
 									value: value
 								}
 								result.push(data);
