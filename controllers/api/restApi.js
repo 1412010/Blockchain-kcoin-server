@@ -213,7 +213,7 @@ router.post('/forgotPassword', function (req, res, next) {
 	var ePass = crypto.createHash('md5').update(newPass).digest('hex');
 
 	accountModel.findOneAndUpdate({ _email: req.body.email }, { _password: ePass }, { new: true }, function (error, updatedData) {
-		if (updatedData.length > 0) {
+		if (updatedData) {
 			var text = "Mật khẩu mới của bạn là: " + newPass;
 			var mailOptions = {
 				from: "My Block Chain <myauctionwebapp@gmail.com>", // sender address
@@ -242,7 +242,7 @@ router.post('/forgotPassword', function (req, res, next) {
 
 router.get('/transaction/:hash', function (req, res, next) {
 	request('https://api.kcoin.club/transactions/' + req.params.hash, function (error, response, body) {
-		if (body.length > 0) {
+		if (body) {
 			var data = JSON.parse(body);
 			return res.status(200).json(data);
 		}
