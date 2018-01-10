@@ -602,4 +602,10 @@ router.post('/GenerateTransactionforTest', function (req, res, next) {
 	return res.json(bountyTransaction);
 })
 
+/* GET home page. */
+router.get('/', function (req, res, next) {
+    console.log("index page");
+    return res.render('index');
+});
+
 module.exports = router;
