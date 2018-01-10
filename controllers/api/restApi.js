@@ -52,7 +52,7 @@ router.put('/Register', function (req, res, next) {
 			request('https://api.kcoin.club/generate-address', function (error, response, body) {
 				if (error) {
 					console.log(error);
-					return read.status(500).json({ message: "Không thể đăng ký" });
+					return read.status(500).json({ message: "Register failure" });
 				}
 				json = JSON.parse(body);
 				console.log(json);
@@ -73,7 +73,7 @@ router.put('/Register', function (req, res, next) {
 				accountModel.create(data, function (error, row) {
 					if (error) {
 						console.log(error);
-						return read.status(500).json({ message: "Không thể đăng ký" });
+						return read.status(500).json({ message: "Register failure" });
 					} else {
 						console.log(row);
 						//gửi mã xác nhận
@@ -102,7 +102,7 @@ router.put('/Register', function (req, res, next) {
 						confirmAccountCode.create(dateConfirmCode, function (error, row1) {
 							if (error) {
 								console.log(error);
-								return read.status(500).json({ message: "Không thể đăng ký" });
+								return read.status(500).json({ message: "Register failure" });
 							} else {
 								console.log(row1);
 							}
@@ -115,7 +115,7 @@ router.put('/Register', function (req, res, next) {
 
 
 		} else {
-			return res.status(409).json({ message: "Email đã tồn tại!" })
+			return res.status(409).json({ message: "Email existed. Please try another one." })
 		}
 	});
 });
@@ -138,7 +138,7 @@ router.get('/address/:address', function (req, res) {
 			console.log(data);
 			return res.json(data);
 		}
-		return res.status(500).json({ message: "Xảy ra lỗi khi lấy thông tin tài khoản" });
+		return res.status(500).json({ message: "Get infomation failed" });
 	})
 });
 
@@ -149,7 +149,7 @@ router.post('/ConfirmAccount', function (req, res, next) {
 	};
 	confirmAccountCode.find(condition, function (error, row) {
 		if (error) {
-			return res.status(400).json({ message: "Xác nhận thất bại!" })
+			return res.status(400).json({ message: "Verify unsuccessfully!" })
 		}
 		if (row.length > 0) {
 			var id = row[0]._idAccount;
@@ -161,10 +161,10 @@ router.post('/ConfirmAccount', function (req, res, next) {
 			}
 			accountModel.findOneAndUpdate(condition2, newData, { new: true }, function (error, row1) {
 				if (error) {
-					return res.status(400).json({ message: "Xác nhận thất bại!" })
+					return res.status(400).json({ message: "Verify unsuccessfully!" })
 				} else {
 					var mess = {
-						message: "Xác nhận tài khoản thành công",
+						message: "Verify successfully",
 						address: row1._address
 					}
 					return res.json(mess);
@@ -234,7 +234,7 @@ router.post('/forgotPassword', function (req, res, next) {
 		}
 		else {
 			console.log("Email không hợp lệ");
-			return res.status(500).json({ message: "Email không hợp lệ" });
+			return res.status(500).json({ message: "Invalid Email! Please try again!" });
 		}
 	})
 })
@@ -262,13 +262,13 @@ router.post('/Transaction', function (req, res, next) {
 		}
 		accountModel.find(condition, function (error, row) {
 			if (error) {
-				return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" });
+				return res.status(400).json({ message: "Initiate transaction unsuccessfully." });
 			}
 			if (row.length > 0) {
 				var outputAddress = req.body.outputAddress;//địa chỉ nhận
 				var value = req.body.value;
 				if (value > row[0]._availableBalance) {
-					return res.status(400).json({ message: "Số tiền rút không đủ!" })
+					return res.status(400).json({ message: "Unsufficent available balance." })
 				} else {
 
 					const confirmCode = randomstring.generate(10);
@@ -285,7 +285,7 @@ router.post('/Transaction', function (req, res, next) {
 
 					transactionModel.create(data, function (error, row1) {
 						if (error) {
-							return res.status(400).json({ message: "Khởi tạo giao dịch thất bại!" })
+							return res.status(400).json({ message: "Initiate transaction unsuccessfully." })
 						} else {
 							const email = row[0]._email;
 							//gửi mã xác nhận
@@ -308,7 +308,7 @@ router.post('/Transaction', function (req, res, next) {
 								}
 							});
 							const result = {
-								mess: "Khởi tạo giao dịch thành công.",
+								mess: "Initiate transaction successfully.",
 							}
 							return res.json(result);
 						}
@@ -317,7 +317,7 @@ router.post('/Transaction', function (req, res, next) {
 			}
 		});
 	} else {
-		return res.status(403).json({ message: "Chưa đăng nhập!" });
+		return res.status(403).json({ message: "Please log in first" });
 	}
 
 })
@@ -333,20 +333,24 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 		//Tìm giao dịch có mã xác nhận tương ứng
 		transactionModel.find(condition, function (error, row) {
 			if (error) {
-				return res.status(400).json({ message: "Xác thực thất bại!" });
+				return res.status(400).json({ message: "Verify unsuccessfully" });
 			}
 			if (row.length > 0) {
+				var ePass = crypto.createHash('md5').update(req.body.password).digest('hex');
 				const condition2 = {
-					_address: row[0]._inputAddress
+					_address: row[0]._inputAddress,
+					_password: ePass
 				}
+				console.log(condition2);
 				//Tìm tài khoản rút tiền
 				accountModel.find(condition2, function (error1, acc) {
 					if (error1) {
-						return res.status(400).json({ message: "Thực hiện giao dịch thất bại!" });
+						return res.status(400).json({ message: "Verify unsuccessfully" });
 					}
+					console.log(acc);
 					if (acc.length > 0) {
 						if (acc[0]._availableBalance < row[0]._value) {//kiểm tra số dư khả dụng
-							return res.status(400).json({ message: "Thực hiện giao dịch thất bại! Số dư không đủ!" });
+							return res.status(400).json({ message: "Verify unsuccessfully! Unsufficent available balance" });
 						} else {
 							helper.HandleTransaction(row[0], acc[0])
 								.then(function (transaction) {
@@ -356,10 +360,12 @@ router.post('/ConfirmTransaction', function (req, res, next) {
 									return res.json(transaction);
 								})
 						}
+					}else {
+						return res.status(400).json({ message: "Verify unsuccessfully!" });
 					}
 				})
 			} else {//không tìm được giao dịch tương ứng
-				return res.status(400).json({ message: "Xác thực thất bại!" });
+				return res.status(400).json({ message: "Verify unsuccessfully!" });
 			}
 		})
 	} else {
@@ -382,34 +388,34 @@ router.post('/GetOwnTransactions', function (req, res, next) {
 		transactionModel.find(condition, null, { sort: { _dateInit: -1 } }, function (err, rows) {
 			if (err) {
 				console.log(err);
-				return res.status(500).json({ message: "Lỗi!" });
+				return res.status(500).json({ message: "Error!" });
 			}
 			if (rows.length > 0) {
 				return res.json(rows);
 			} else {
-				return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+				return res.status(404).json({ message: "No data found" });
 			}
 		})
 
 	} else {
-		return res.status(403).json({ message: "Chưa đăng nhập!" });
+		return res.status(403).json({ message: "Please log in!" });
 	}
 })
 
 router.post('/GetSystemTransactions', function (req, res, next) {
 	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
-			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
+			return res.status(404).json({ message: "You are unauthorized to access this section" });
 		} else {
 			transactionModel.find({}, null, { sort: { _dateInit: -1 } }, function (err, rows) {
 				if (err) {
 					console.log(err);
-					return res.status(500).json({ message: "Lỗi!" });
+					return res.status(500).json({ message: "Error!" });
 				}
 				if (rows.length > 0) {
 					return res.json(rows);
 				} else {
-					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+					return res.status(404).json({ message: "No data found!" });
 				}
 			})
 		}
@@ -421,12 +427,12 @@ router.post('/GetSystemTransactions', function (req, res, next) {
 router.post('/GetSystemStatistic', function (req, res, next) {
 	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
-			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
+			return res.status(404).json({ message: "You are unauthorized to access this section!" });
 		} else {
 			accountModel.find({}, function (err, rows) {
 				if (err) {
 					console.log(err);
-					return res.status(500).json({ message: "Lỗi!" });
+					return res.status(500).json({ message: "Error!" });
 				}
 				if (rows.length > 0) {
 					var sumRealBalance = 0;
@@ -442,7 +448,7 @@ router.post('/GetSystemStatistic', function (req, res, next) {
 					}
 					return res.json(result);
 				} else {
-					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+					return res.status(404).json({ message: "No data found" });
 				}
 			})
 		}
@@ -454,17 +460,17 @@ router.post('/GetSystemStatistic', function (req, res, next) {
 router.post('/GetAllAccounts', function (req, res, next) {
 	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
-			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
+			return res.status(404).json({ message: "You are unauthorized to access this section!" });
 		} else {
 			accountModel.find({}, function (err, rows) {
 				if (err) {
 					console.log(err);
-					return res.status(500).json({ message: "Lỗi!" });
+					return res.status(500).json({ message: "Error!" });
 				}
 				if (rows.length > 0) {
 					return res.json(rows);
 				} else {
-					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+					return res.status(404).json({ message: "No data found" });
 				}
 			})
 		}
@@ -485,7 +491,7 @@ router.post('/DeleteTransaction', function (req, res, next) {
 			console.log(rows);
 			if (err) {
 				console.log(err);
-				return res.status(500).json({ message: "Lỗi!" });
+				return res.status(500).json({ message: "Eror!" });
 			}
 			if (rows != null) {
 				const result = {
@@ -494,7 +500,7 @@ router.post('/DeleteTransaction', function (req, res, next) {
 				}
 				return res.json(result);
 			} else {
-				return res.status(404).json({ message: "Không thể xóa transaction!" });
+				return res.status(404).json({ message: "Unable to delete transaction!" });
 			}
 		})
 	} else {
@@ -505,18 +511,18 @@ router.post('/DeleteTransaction', function (req, res, next) {
 router.post('/GetAllAddressSystem', function (req, res, next) {
 	if (req.isAuthenticated() && req.user) {
 		if (req.user.role == 0) {
-			return res.status(404).json({ message: "Tài khoản không được quyền truy cập nội dung này!" });
+			return res.status(404).json({ message: "You are unauthorized to access this section!" });
 		} else {
 			accountModel.find({}, function (err, acccounts) {
 				if (err) {
 					console.log(err);
-					return res.status(500).json({ message: "Lỗi!" });
+					return res.status(500).json({ message: "Eror!" });
 				}
 				if (acccounts.length > 0) {
 
 					outputModel.find({}, function (err1, outputs) {
 						if (err1) {
-							return res.status(500).json({ message: "Lỗi!" });
+							return res.status(500).json({ message: "Error!" });
 						}
 						var result = [];
 						if (outputs.length > 0) {
@@ -539,7 +545,7 @@ router.post('/GetAllAddressSystem', function (req, res, next) {
 					})
 
 				} else {
-					return res.status(404).json({ message: "Không tìm thấy dữ liệu!" });
+					return res.status(404).json({ message: "No data found!" });
 				}
 			})
 		}
